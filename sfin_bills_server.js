@@ -1,9 +1,12 @@
-var http = require('http')
+var http = require('http');
 var fs = require('fs');
-var vm = require('vm')
+var vm = require('vm');
 var readline = require('readline');
 var google = require('googleapis');
 var googleAuth = require('google-auth-library');
+require('sprintf-js');
+var m = require('module');
+var listSpecificModified = require('./file_loader');
 
 var SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
@@ -14,7 +17,9 @@ var DRIVE_TOKEN_PATH = TOKEN_DIR + 'drive-nodejs-quickstart.json'
 var spreadsheets_api_credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-bb915af4e186.json')
 
 var web_server = http.createServer(function (resquest, response) {
-  vm.runInThisContext(fs.readFileSync('file_loader.js'))
+  // TODO: when loading the other js files, it was impossible to use 'require' function at them
+  //      changed to export functions on these files. Let's follow up to undestand some impact on don't use vm.sunInThisContext
+  // vm.runInThisContext(fs.readFileSync('file_loader.js'))
   // vm.runInThisContext(fs.readFileSync('spreadsheet.js'))
   fs.readFile(TOKEN_DIR + 'client_secret.json', function processClientSecrets(err, content) {
     if (err) {

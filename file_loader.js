@@ -1,10 +1,11 @@
+var s = require("./bower_components/underscore.string");
 
 /**
  * Lists the files which name contains 'Comprovante' and were modified today
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
-function listSpecificModified(auth, google) {
+var list = function listSpecificModified(auth, google) {
   var service = google.drive('v2');
 
   // TODO: this date is in UTC timezone. Use moment.js to handle datetime
@@ -30,9 +31,13 @@ function listSpecificModified(auth, google) {
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         console.log('%s (%s)', file.title, file.id);
+        billing_value = s.strRightBack(file.title, "_");
       }
     }
     // TODO: extract value from file name
+    console.log(billing_value)
     // TODO: extract name of receipt
   });
 }
+
+module.exports = list;
