@@ -24,6 +24,6 @@
   },
   "dependencies": {
     "underscore.string": "^3.3.4",
-    "sprintf": "sprintf.js#^1.0.3"
+    "sprintf-js": "~1.0.3"
   }
 }
