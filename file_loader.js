@@ -37,7 +37,6 @@ var list = function listSpecificModified(auth, google) {
         console.log('%s (%s)', file.title, file.id);
         billing_value = s.strRightBack(file.title, "_")
         billing_value = s.strLeftBack(billing_value, ".");
-        // TODO: extract value from file name
         console.log(billing_value)
         first_limiter_occur = file.title.indexOf("_") + 1;
         last_limiter_occur = file.title.lastIndexOf("_");
@@ -49,16 +48,16 @@ var list = function listSpecificModified(auth, google) {
       fs.readFile('bills_data_map.json', function process(err, content) {
         var body = JSON.parse(content);
         console.log(body);
-        // content_map = new Map(strb);
-        // console.log('content: ' + content_map);
         spreadsheet_map = new Map();
         bills_map.forEach(function(value, key) {
           console.log(key + " : " + value);
           console.log(body[key]);
+          // TODO: not all keys identified. Should search using contains, because p.e. IPTU2016 does not match iptu
           bill_key = body[key];
           spreadsheet_map.set(bill_key, value);
         });
         console.log('spreadsheets: ' + spreadsheet_map);
+        // TODO
         // updateSpreadsheet(content);
       });
     }
