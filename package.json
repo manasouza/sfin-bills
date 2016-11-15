@@ -23,7 +23,9 @@
     "node": "4.4.7"
   },
   "dependencies": {
-    "underscore.string": "^3.3.4",
-    "sprintf-js": "~1.0.3"
+    "collections": "^5.0.5",
+    "hashmap": "^2.0.6",
+    "sprintf-js": "~1.0.3",
+    "underscore.string": "^3.3.4"
   }
 }
