@@ -37,21 +37,25 @@ var list = function listSpecificModified(auth, google) {
         console.log('%s (%s)', file.title, file.id);
         billing_value = s.strRightBack(file.title, "_")
         billing_value = s.strLeftBack(billing_value, ".");
-        console.log(billing_value)
+        var parcels_index = billing_value.indexOf("(");
+        // TODO: test parcels value on receipt value
+        console.log('parcels: '+parcels_index);
+        if (parcels_index > -1) {
+          billing_value = billing_value.substring(parcels_index, billing_value.length);
+        }
         first_limiter_occur = file.title.indexOf("_") + 1;
         last_limiter_occur = file.title.lastIndexOf("_");
         receipt_name = file.title.substring(first_limiter_occur, last_limiter_occur);
-        console.log(receipt_name);
         bills_map.set(receipt_name, billing_value);
       }
       console.log(bills_map)
       fs.readFile('bills_data_map.json', function process(err, content) {
         var body = JSON.parse(content);
-        console.log(body);
+        console.log('bills_data_map: ' + body);
         spreadsheet_map = new Map();
         bills_map.forEach(function(value, key) {
-          console.log('\n'+key + " : " + value);
           for (var key_value in body) {
+            // verifies the key on bills_data_map that fits to receipt name
             if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
               console.log(body[key_value] + ' --- ' + key);
               spreadsheet_map.set(body[key_value], value);
@@ -59,9 +63,7 @@ var list = function listSpecificModified(auth, google) {
             }
           }
         });
-        console.log('spreadsheets: ' + spreadsheet_map.values().toString());
-
-        // updateSpreadsheet(spreadsheet_map);
+        updateSpreadsheet(spreadsheet_map);
       });
     }
   });
