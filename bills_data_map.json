@@ -3,6 +3,7 @@
   "cpfl":"Luz",
   "ultragaz":"Gas",
   "sanasa":"Agua",
-  "condominio":"Condominio"
-  "iptu":"Impostos"
+  "condominio":"Condominio",
+  "iptu":"Impostos",
+  "poliedro":"Mensalidades"
 }

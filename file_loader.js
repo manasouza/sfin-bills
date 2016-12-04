@@ -50,15 +50,18 @@ var list = function listSpecificModified(auth, google) {
         console.log(body);
         spreadsheet_map = new Map();
         bills_map.forEach(function(value, key) {
-          console.log(key + " : " + value);
-          console.log(body[key]);
-          // TODO: not all keys identified. Should search using contains, because p.e. IPTU2016 does not match iptu
-          bill_key = body[key];
-          spreadsheet_map.set(bill_key, value);
+          console.log('\n'+key + " : " + value);
+          for (var key_value in body) {
+            if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
+              console.log(body[key_value] + ' --- ' + key);
+              spreadsheet_map.set(body[key_value], value);
+              break;
+            }
+          }
         });
-        console.log('spreadsheets: ' + spreadsheet_map);
-        // TODO
-        // updateSpreadsheet(content);
+        console.log('spreadsheets: ' + spreadsheet_map.values().toString());
+
+        // updateSpreadsheet(spreadsheet_map);
       });
     }
   });
