@@ -21,8 +21,27 @@ var sheet = function updateSpreadsheet(data_map) {
 	    console.log('Loaded doc: '+info.title+' by '+info.author.email);
 	    bills_sheet = info.worksheets[0];
 	  	console.log('sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
-			monthReference(2);
-			workingCells();
+			month = monthReference(2, function(month, row, col) {
+        console.log('monthReference callback: ' + month +', '+ row +', '+ col);
+        // TODO: new column factor: this case is two, because by default, a new month column is a two merged cells
+        var new_col = col + 2;
+        bills_sheet.resize({ colCount: new_col });
+        console.log('sheet size col: ' + bills_sheet.colCount);
+        bills_sheet.getCells({
+          'min-row': row,
+      		'max-row': row,
+      		'min-col': col,
+      		'max-col': new_col,
+      		'return-empty': true
+      	}, function (err, cells) {
+          cells.forEach(function (cell) {
+            console.log(month);
+      			console.log('row: ' + cell.row + ' - col: ' + cell.col);
+            cell.setValue(month);
+      		});
+        });
+      });
+			// workingCells();
 	  });
 	})
 }
@@ -42,7 +61,7 @@ var sheet = function updateSpreadsheet(data_map) {
 // 	});
 // }
 
-function monthReference(month_row_num) {
+function monthReference(month_row_num, callback) {
 	// TODO: externalize locale
 	m.locale('pt-BR')
 	bills_sheet.getCells({
@@ -50,19 +69,21 @@ function monthReference(month_row_num) {
 		'max-row': month_row_num,
 		'return-empty': false
 	}, function (err, cells) {
+    if (err) {
+      console.log('Error: ' + err);
+    }
 		// TODO: externalize date format
 		var currentMonth = m().format('MMMM/YYYY')
-		console.log(currentMonth)
-		var lastUpdatedMonth = m(cells[cells.length -1])
-		console.log(lastUpdatedMonth);
-		console.log(m().isAfter(lastUpdatedMonth));
-		if (currentMonth !== lastUpdatedMonth && m().isAfter(lastUpdatedMonth)) {
+		console.log('currentMonth: ' + currentMonth)
+		// var lastUpdatedMonth = m(cells[cells.length -1])
+    // console.log(cells);
+    var lastUpdatedMonth = cells[cells.length -1];
+		console.log(m().isAfter(m(lastUpdatedMonth.value)));
+    console.log(lastUpdatedMonth);
+		// if (currentMonth !== lastUpdatedMonth && m().isAfter(lastUpdatedMonth)) {
 			// TODO: Add 2 columns and merge cell with month information
-		}
-		// TODO: update cell
-		cells.forEach(function (cell) {
-				console.log(cell.value)
-		});
+		// }
+    callback(currentMonth, lastUpdatedMonth.row, lastUpdatedMonth.col);
 	});
 }
 
@@ -73,6 +94,7 @@ function workingCells(cb) {
 		'max-col': max_col,
 		'return-empty': false
 	}, function (err, cells) {
+    console.log('workingCells: ' + cells);
 		cells.forEach(function (cell) {
 			//console.log('row: ' + cell.row + ' - col: ' + cell.col+'/'+max_col);
 		});
