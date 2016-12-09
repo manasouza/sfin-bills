@@ -11,6 +11,7 @@ var credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-bb915af4e186.json
 // TODO: receive spreadsheet id as an argument (come from HTTP request for example)
 var my_sheet = new GoogleSpreadsheet('1zqc0BDV3l5wq7tEzJZF2GhFZUc4e213gaYcT3Zb3OyQ')
 var bills_sheet;
+var working_col;
 
 // TODO: extract the column with all the group cost categories
 // TODO: create a comparison table for: "extracted file name x group cost name"
@@ -21,27 +22,38 @@ var sheet = function updateSpreadsheet(data_map) {
 	    console.log('Loaded doc: '+info.title+' by '+info.author.email);
 	    bills_sheet = info.worksheets[0];
 	  	console.log('sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
-			month = monthReference(2, function(month, row, col) {
+      // TODO: 2 is the months row
+			monthReference(2, function(month, row, col) {
         console.log('monthReference callback: ' + month +', '+ row +', '+ col);
         // TODO: new column factor: this case is two, because by default, a new month column is a two merged cells
         var new_col = col + 2;
+        console.log(new_col);
         bills_sheet.resize({ colCount: new_col });
+        update_col = bills_sheet.colCount;
         console.log('sheet size col: ' + bills_sheet.colCount);
         bills_sheet.getCells({
           'min-row': row,
       		'max-row': row,
-      		'min-col': col,
-      		'max-col': new_col,
+      		'min-col': update_col,
+      		'max-col': update_col,
       		'return-empty': true
       	}, function (err, cells) {
           cells.forEach(function (cell) {
             console.log(month);
       			console.log('row: ' + cell.row + ' - col: ' + cell.col);
-            cell.setValue(month);
+            working_col = col;
+            cell.setValue(month, function(err) {
+              if (err) {
+                console.log(err);
+              }
+            });
       		});
         });
       });
-			// workingCells();
+      // TODO: 3 is the categories column
+      workingRows(3, data_map, function(low_row, high_row) {
+        console.log(low_row + ' ~ ' + high_row);
+      })
 	  });
 	})
 }
@@ -73,18 +85,39 @@ function monthReference(month_row_num, callback) {
       console.log('Error: ' + err);
     }
 		// TODO: externalize date format
-		var currentMonth = m().format('MMMM/YYYY')
-		console.log('currentMonth: ' + currentMonth)
-		// var lastUpdatedMonth = m(cells[cells.length -1])
-    // console.log(cells);
-    var lastUpdatedMonth = cells[cells.length -1];
-		console.log(m().isAfter(m(lastUpdatedMonth.value)));
-    console.log(lastUpdatedMonth);
-		// if (currentMonth !== lastUpdatedMonth && m().isAfter(lastUpdatedMonth)) {
-			// TODO: Add 2 columns and merge cell with month information
-		// }
-    callback(currentMonth, lastUpdatedMonth.row, lastUpdatedMonth.col);
+		var current_month = m().format('MMMM/YYYY')
+		console.log('current_month: ' + current_month)
+    var last_updated_month_cell = cells[cells.length -1];
+    console.log(last_updated_month_cell);
+		// TODO: seems that m().isAfter is not working as expected
+		console.log(m().isAfter(m(last_updated_month_cell.numericValue)));
+    if (current_month.toLowerCase() !== last_updated_month_cell.value.toLowerCase() && m().isAfter(m(last_updated_month_cell.numericValue))) {
+      callback(current_month, last_updated_month_cell.row, last_updated_month_cell.col);
+    } else {
+      console.log('Already at current month');
+      working_col = last_updated_month_cell.col;
+    }
 	});
+}
+
+function workingRows(category_col, data_map, callback) {
+  bills_sheet.getCells({
+    'min-col': category_col,
+    'max-col': category_col,
+    'return-empty': false
+  }, function (err, cells) {
+    console.log(data_map.keys());
+    console.log(data_map.values());
+      var category_rows = [];
+      cells.forEach(function (cell) {
+        if (data_map.has(cell.value)) {
+          console.log(cell.value);
+          category_rows.push(cell.row);
+        }
+      });
+      console.log('categories: ' + category_rows);
+      callback(category_rows[0], category_rows[category_rows.length - 1])
+  });
 }
 
 function workingCells(cb) {
