@@ -1,9 +1,9 @@
 {
-  "vivo":"Internet/Telefonia",
+  "vivo":"Telefonia/Internet/TV",
   "cpfl":"Luz",
   "ultragaz":"Gas",
   "sanasa":"Agua",
-  "condominio":"Condominio",
+  "condominio":"Condomínio",
   "iptu":"Impostos",
   "poliedro":"Mensalidades"
 }
