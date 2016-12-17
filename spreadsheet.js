@@ -51,13 +51,48 @@ var sheet = function updateSpreadsheet(data_map) {
         });
       });
       // TODO: 3 is the categories column
-      workingRows(3, data_map, function(low_row, high_row) {
-        console.log(low_row + ' ~ ' + high_row);
+      workingRows(3, data_map, function(data_map, category_rows) {
+        category_rows.forEach(function (cat_row, index) {
+          console.log(index + ' = ' + cat_row + ':' + working_col);
+          bills_sheet.getCells({
+            'min-row': cat_row,
+        		'max-row': cat_row,
+        		'min-col': working_col,
+            'max-col': working_col,
+            'return-empty' : true
+          }, function (err, cells) {
+            cells.forEach(function (cell) {
+              console.log('index: ' + index);
+              iterateOver(data_map.values(), function (values) {
+                values.forEach(function(value, value_index) {
+                  console.log(value_index + ': ' + value);
+                  cell.setValue(value, function(err) {
+                    if (err) {
+                      console.log(err);
+                    }
+                  });
+                });
+              });
+            });
+          });
+        });
       })
 	  });
 	})
 }
 
+function iterateOver(iterator, callback) {
+  var current_values = [];
+  while (true) {
+    var current = iterator.next();
+    if (current.done) {
+      break;
+    }
+    console.log(current);
+    current_values.push(current.value);
+  }
+  callback(current_values);
+}
 // function workingRow(rowNum) {
 // 	bills_sheet.getRows({
 // 		//'row': rowNum,
@@ -116,7 +151,7 @@ function workingRows(category_col, data_map, callback) {
         }
       });
       console.log('categories: ' + category_rows);
-      callback(category_rows[0], category_rows[category_rows.length - 1])
+      callback(data_map, category_rows);
   });
 }
 
