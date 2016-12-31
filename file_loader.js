@@ -35,7 +35,9 @@ var list = function listSpecificModified(auth, google) {
       for (var i = 0; i < files.length; i++) {
         var file = files[i];
         console.log('%s (%s)', file.title, file.id);
-        billing_value = s.strRightBack(file.title, "_")
+        billing_value = s.strRightBack(file.title, "_");
+        // receipt name could have parcels between parenthesis
+        billing_value = s.strLeftBack(billing_value, "(");
         billing_value = s.strLeftBack(billing_value, ".");
         var parcels_index = billing_value.indexOf("(");
         // TODO: test parcels value on receipt value
