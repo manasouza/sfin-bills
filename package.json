@@ -4,7 +4,7 @@
   "description": "interprets some file name at Google Drive and add this value to some Google Spreadsheet",
   "main": "sfin_bills_server.js",
   "scripts": {
-    "test": "sfin"
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -24,10 +24,12 @@
   },
   "dependencies": {
     "collections": "^5.0.5",
+    "expect.js": "^0.3.1",
     "google-auth-library": "^0.10.0",
     "google-spreadsheet": "^2.0.3",
     "googleapis": "^17.1.0",
     "hashmap": "^2.0.6",
+    "mocha": "^3.2.0",
     "moment": "^2.17.0",
     "sprintf-js": "~1.0.3",
     "underscore.string": "^3.3.4"
