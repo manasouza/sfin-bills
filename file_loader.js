@@ -82,7 +82,8 @@ var self = module.exports = {
       if (parcels_index > -1) {
         billing_value = billing_value.substring(parcels_index, billing_value.length);
       }
-      console.log(billing_value);
+      console.log('billing value = ' + billing_value);
+      return billing_value;
     }
 }
 
