@@ -56,7 +56,8 @@ function authorize(credentials, callback) {
       getNewToken(oauth2Client, callback);
     } else {
       oauth2Client.credentials = JSON.parse(token);
-      callback(oauth2Client, google);
+      console.log('file_loader functions: \n' + callback)
+      callback.listSpecificModified(oauth2Client, google);
     }
   });
 }
