@@ -83,8 +83,6 @@ var self = module.exports = {
         billing_value = billing_value.substring(parcels_index, billing_value.length);
       }
       console.log('billing value = ' + billing_value);
-      return billing_value;
+      return s.trim(billing_value);
     }
 }
-
-// module.exports = list;

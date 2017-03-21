@@ -13,15 +13,39 @@ describe('FileLoader', function() {
       assert.ok(true)
     });
   });
-  describe('Get billing value from file name', function() {
+  describe('Get billing value', function() {
     it('should get billing value from file name', function() {
       // GIVEN
-      var file_title = 'Comprovante_Condomínio_56321.pdf'
+      var expected_billing_identifier = 'Comprovante'
+      var expected_billing_value = '56321'
+      var file_title = expected_billing_identifier+'_Condomínio_'+expected_billing_value+'.pdf'
       // WHEN
       billing_value = fileLoader.getBillingValue(file_title)
       // THEN
       expect(billing_value).to.be.ok()
-      expect(billing_value).to.be('56321')
+      expect(billing_value).to.be(expected_billing_value)
+    });
+    it('should get billing value from file name with parcels', function() {
+      // GIVEN
+      var expected_billing_identifier = 'Comprovante'
+      var expected_billing_value = '56321'
+      var file_title = expected_billing_identifier+'_Condomínio_'+expected_billing_value+' (2).pdf'
+      // WHEN
+      billing_value = fileLoader.getBillingValue(file_title)
+      // THEN
+      expect(billing_value).to.be.ok()
+      expect(billing_value).to.be(expected_billing_value)
+    });
+    it('should get billing value from file name with extra receipt info and with parcels', function() {
+      // GIVEN
+      var expected_billing_identifier = 'comprovante'
+      var expected_billing_value = '3750'
+      var file_title = expected_billing_identifier+'_vivo_8113_'+expected_billing_value+' (1)'
+      // WHEN
+      billing_value = fileLoader.getBillingValue(file_title)
+      // THEN
+      expect(billing_value).to.be.ok()
+      expect(billing_value).to.be(expected_billing_value)
     });
   });
 });
