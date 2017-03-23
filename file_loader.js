@@ -46,9 +46,7 @@ var self = module.exports = {
           var file = files[i];
           console.log('%s (%s)', file.title, file.id);
           this.getBillingValue(file.title)
-          first_limiter_occur = file.title.indexOf("_") + 1;
-          last_limiter_occur = file.title.lastIndexOf("_");
-          receipt_name = file.title.substring(first_limiter_occur, last_limiter_occur);
+          this.getReceiptName(file.title)
           bills_map.set(receipt_name, billing_value);
         }
         console.log(bills_map)
@@ -84,5 +82,12 @@ var self = module.exports = {
       }
       console.log('billing value = ' + billing_value);
       return s.trim(billing_value);
+    },
+
+    getReceiptName : function(file_title) {
+      first_limiter_occur = file_title.indexOf("_") + 1;
+      last_limiter_occur = file_title.lastIndexOf("_");
+      receipt_name = file_title.substring(first_limiter_occur, last_limiter_occur);
+      return s.trim(receipt_name);
     }
 }
