@@ -49,10 +49,10 @@ var self = module.exports = {
           this.getReceiptName(file.title)
           bills_map.set(receipt_name, billing_value);
         }
-        console.log(bills_map)
+        console.log('bills to be mapped: ' + bills_map)
         fs.readFile('bills_data_map.json', function process(err, content) {
           var body = JSON.parse(content);
-          console.log('bills_data_map: ' + body);
+          console.log('bills template: ' + body);
           spreadsheet_map = new Map();
           bills_map.forEach(function(value, key) {
             for (var key_value in body) {

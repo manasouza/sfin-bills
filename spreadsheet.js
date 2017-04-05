@@ -16,7 +16,6 @@ var working_col;
 // TODO: extract the column with all the group cost categories
 // TODO: create a comparison table for: "extracted file name x group cost name"
 var sheet = function updateSpreadsheet(data_map) {
-	console.log("data map: " + data_map);
 	my_sheet.useServiceAccountAuth(credentials, (err, token) => {
 		my_sheet.getInfo(function(err, info) {
 	    console.log('Loaded doc: '+info.title+' by '+info.author.email);
@@ -39,7 +38,7 @@ var sheet = function updateSpreadsheet(data_map) {
       		'return-empty': true
       	}, function (err, cells) {
           cells.forEach(function (cell) {
-            console.log(month);
+            console.log('month: ' +month);
       			console.log('row: ' + cell.row + ' - col: ' + cell.col);
             working_col = col;
             cell.setValue(month, function(err) {
@@ -51,30 +50,25 @@ var sheet = function updateSpreadsheet(data_map) {
         });
       });
       // TODO: 3 is the categories column
-      workingRows(3, data_map, function(data_map, category_rows) {
-        category_rows.forEach(function (cat_row, index) {
-          console.log(index + ' = ' + cat_row + ':' + working_col);
+      workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
+        category_value_map.forEach(function(value,key) {
           bills_sheet.getCells({
-            'min-row': cat_row,
-        		'max-row': cat_row,
+            'min-row': key,
+        		'max-row': key,
         		'min-col': working_col,
             'max-col': working_col,
             'return-empty' : true
-          }, function (err, cells) {
-            cells.forEach(function (cell) {
-              console.log('index: ' + index);
-              iterateOver(data_map.values(), function (values) {
-                values.forEach(function(value, value_index) {
-                  console.log(value_index + ': ' + value);
-                  cell.setValue(value, function(err) {
-                    if (err) {
-                      console.log(err);
-                    }
-                  });
+            }, function (err, cells) {
+              cells.forEach(function (cell) {
+                console.log('cell row: ' + cell.row)
+                console.log('value arg: ' + value);
+                cell.setValue(data_map.get(value), function(err) {
+                  if (err) {
+                    console.log("Error at cell.setValue: " + err);
+                  }
                 });
               });
-            });
-          });
+          })
         });
       })
 	  });
@@ -124,7 +118,7 @@ function monthReference(month_row_num, callback) {
 		console.log('current_month: ' + current_month)
     var last_updated_month_cell = cells[cells.length -1];
     console.log(last_updated_month_cell);
-		// TODO: seems that m().isAfter is not working as expected
+		// TODO: TEST seems that m().isAfter is not working as expected
 		console.log(m().isAfter(m(last_updated_month_cell.numericValue)));
     if (current_month.toLowerCase() !== last_updated_month_cell.value.toLowerCase() && m().isAfter(m(last_updated_month_cell.numericValue))) {
       callback(current_month, last_updated_month_cell.row, last_updated_month_cell.col);
@@ -144,14 +138,16 @@ function workingRows(category_col, data_map, callback) {
     console.log(data_map.keys());
     console.log(data_map.values());
       var category_rows = [];
+      var category_value_map = new Map();
       cells.forEach(function (cell) {
         if (data_map.has(cell.value)) {
           console.log(cell.value);
           category_rows.push(cell.row);
+          category_value_map.set(cell.row, cell.value)
         }
       });
-      console.log('categories: ' + category_rows);
-      callback(data_map, category_rows);
+      console.log('categories MAP: ' + category_value_map);
+      callback(data_map, category_rows, category_value_map);
   });
 }
 

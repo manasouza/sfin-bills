@@ -16,7 +16,7 @@ var DRIVE_TOKEN_PATH = TOKEN_DIR + 'drive-nodejs-quickstart.json'
 // service account created credentials
 var spreadsheets_api_credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json')
 
-var web_server = http.createServer(function (resquest, response) {
+var web_server = http.createServer(function (request, response) {
   // TODO: when loading the other js files, it was impossible to use 'require' function at them
   //      changed to export functions on these files. Let's follow up to undestand some impact on don't use vm.sunInThisContext
   // vm.runInThisContext(fs.readFileSync('file_loader.js'))
@@ -56,7 +56,6 @@ function authorize(credentials, callback) {
       getNewToken(oauth2Client, callback);
     } else {
       oauth2Client.credentials = JSON.parse(token);
-      console.log('file_loader functions: \n' + callback)
       callback.listSpecificModified(oauth2Client, google);
     }
   });
