@@ -1,6 +1,6 @@
 var fs = require('fs');
 var s = require("./node_modules/underscore.string");
-var updateSpreadsheet = require('./spreadsheet');
+var spreadsheet = require('./spreadsheet');
 // var HashMap = require('hashmap');
 var Map = require("collections/map");
 
@@ -64,7 +64,7 @@ var self = module.exports = {
               }
             }
           });
-          updateSpreadsheet(spreadsheet_map);
+          spreadsheet.updateSpreadsheet(spreadsheet_map);
         });
       }
     },
