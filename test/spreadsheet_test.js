@@ -30,5 +30,16 @@ describe('Spreadsheet Test', function() {
       // THEN
       expect(currency_value).to.be(expected_value)
     });
-  })
-})
+  });
+  describe('Expect expense months correctly identified', function() {
+    it('should return true if sheet month column is equal to current month', function() {
+
+    });
+    it('should return false if sheet month column is greather than current month', function() {
+
+    });
+    it('should return false if sheet month column is lesser than current month', function() {
+
+    });
+  });
+});

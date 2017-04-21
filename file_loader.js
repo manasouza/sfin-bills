@@ -49,16 +49,14 @@ var self = module.exports = {
           this.getReceiptName(file.title)
           bills_map.set(receipt_name, billing_value);
         }
-        console.log('bills to be mapped: ' + bills_map)
         fs.readFile('bills_data_map.json', function process(err, content) {
           var body = JSON.parse(content);
-          console.log('bills template: ' + body);
           spreadsheet_map = new Map();
           bills_map.forEach(function(value, key) {
             for (var key_value in body) {
               // verifies the key on bills_data_map that fits to receipt name
               if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
-                console.log(body[key_value] + ' --- ' + key);
+                console.log('MAPPING: ' + body[key_value] + ' --- ' + key);
                 spreadsheet_map.set(body[key_value], value);
                 break;
               }

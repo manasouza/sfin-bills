@@ -22,9 +22,9 @@ var self = module.exports = {
   updateSpreadsheet : function(data_map) {
   	my_sheet.useServiceAccountAuth(credentials, (err, token) => {
   		my_sheet.getInfo(function(err, info) {
-  	    console.log('Loaded doc: '+info.title+' by '+info.author.email);
+  	    console.log('[INFO] Loaded doc: '+info.title+' by '+info.author.email);
   	    bills_sheet = info.worksheets[0];
-  	  	console.log('sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
+  	  	console.log('[INFO] sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
         // TODO: 2 is the months row
   			monthReference(2, function(month, row, col) {
           console.log('monthReference callback: ' + month +', '+ row +', '+ col);
@@ -112,18 +112,25 @@ var self = module.exports = {
       }
   		// TODO: externalize date format
   		var current_month = m().format('MMMM/YYYY')
-  		console.log('current_month: ' + current_month)
+  		console.log('[INFO] current_month: ' + current_month)
       var last_updated_month_cell = cells[cells.length -1];
-      console.log(last_updated_month_cell);
   		// TODO: TEST seems that m().isAfter is not working as expected
   		console.log(m().isAfter(m(last_updated_month_cell.numericValue)));
-      if (current_month.toLowerCase() !== last_updated_month_cell.value.toLowerCase() && m().isAfter(m(last_updated_month_cell.numericValue))) {
+      if (!isAtCurrentMonth(current_month)) {
+        console.log('[INFO] Current month ' + current_month + ' differs from ' + last_month);
         callback(current_month, last_updated_month_cell.row, last_updated_month_cell.col);
       } else {
-        console.log('Already at current month');
+        console.log('[INFO] Already at current month');
         working_col = last_updated_month_cell.col;
       }
   	});
+  }
+
+  function isAtCurrentMonth(current_month) {
+    if (current_month.toLowerCase() !== last_updated_month_cell.value.toLowerCase()
+    && m().isAfter(m(last_updated_month_cell.numericValue))) {
+
+    }
   }
 
   function workingRows(category_col, data_map, callback) {
@@ -143,21 +150,7 @@ var self = module.exports = {
             category_value_map.set(cell.row, cell.value)
           }
         });
-        console.log('categories MAP: ' + category_value_map);
+        console.log('CATEGORIES MAP: ' + category_value_map);
         callback(data_map, category_rows, category_value_map);
     });
-  }
-
-  function workingCells(cb) {
-  	var max_col = bills_sheet.colCount;
-  	bills_sheet.getCells({
-  		'min-col': 1,
-  		'max-col': max_col,
-  		'return-empty': false
-  	}, function (err, cells) {
-      console.log('workingCells: ' + cells);
-  		cells.forEach(function (cell) {
-  			//console.log('row: ' + cell.row + ' - col: ' + cell.col+'/'+max_col);
-  		});
-  	});
   }
