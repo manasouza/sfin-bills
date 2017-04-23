@@ -26,33 +26,7 @@ var self = module.exports = {
   	    bills_sheet = info.worksheets[0];
   	  	console.log('[INFO] sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
         // TODO: 2 is the months row
-  			monthReference(2, function(month, row, col) {
-          console.log('monthReference callback: ' + month +', '+ row +', '+ col);
-          // TODO: new column factor: this case is two, because by default, a new month column is a two merged cells
-          var new_col = col + 2;
-          console.log(new_col);
-          bills_sheet.resize({ colCount: new_col });
-          update_col = bills_sheet.colCount;
-          console.log('sheet size col: ' + bills_sheet.colCount);
-          bills_sheet.getCells({
-            'min-row': row,
-        		'max-row': row,
-        		'min-col': update_col,
-        		'max-col': update_col,
-        		'return-empty': true
-        	}, function (err, cells) {
-            cells.forEach(function (cell) {
-              console.log('month: ' +month);
-        			console.log('row: ' + cell.row + ' - col: ' + cell.col);
-              working_col = col;
-              cell.setValue(month, function(err) {
-                if (err) {
-                  console.log(err);
-                }
-              });
-        		});
-          });
-        });
+  			monthReference(2, createNewColumns);
         // TODO: 3 is the categories column
         workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
           category_value_map.forEach(function(value,key) {
@@ -122,12 +96,12 @@ var self = module.exports = {
   		console.log('[INFO] current_month: ' + current_month)
       var last_updated_month_cell = cells[cells.length -1];
         console.log(m().isAfter(m(last_updated_month_cell.numericValue)));
-      if (!self.isAtCurrentMonth(current_month, last_updated_month_cell.value)) {
-        console.log('[INFO] Current month ' + current_month + ' differs from ' + last_month);
-        callback(current_month, last_updated_month_cell.row, last_updated_month_cell.col);
-      } else {
+      if (self.isAtCurrentMonth(current_month, last_updated_month_cell.value)) {
         console.log('[INFO] Already at current month');
         working_col = last_updated_month_cell.col;
+      } else {
+        console.log('[INFO] Current month ' + current_month + ' differs from ' + last_month);
+        callback(current_month, last_updated_month_cell.row, last_updated_month_cell.col);
       }
   	});
   }
@@ -151,5 +125,33 @@ var self = module.exports = {
         });
         console.log('CATEGORIES MAP: ' + category_value_map);
         callback(data_map, category_rows, category_value_map);
+    });
+  }
+
+  function createNewColumns(month, row, col) {
+    console.log('monthReference callback: ' + month +', '+ row +', '+ col);
+    // TODO: new column factor: this case is two, because by default, a new month column is a two merged cells
+    var new_col = col + 2;
+    console.log("[INFO] creating new columns after the last one. factor: " + new_col);
+    bills_sheet.resize({ colCount: new_col });
+    update_col = bills_sheet.colCount;
+    console.log('sheet size col: ' + bills_sheet.colCount);
+    bills_sheet.getCells({
+      'min-row': row,
+      'max-row': row,
+      'min-col': update_col,
+      'max-col': update_col,
+      'return-empty': true
+    }, function (err, cells) {
+      cells.forEach(function (cell) {
+        console.log('month: ' +month);
+        console.log('row: ' + cell.row + ' - col: ' + cell.col);
+        working_col = col;
+        cell.setValue(month, function(err) {
+          if (err) {
+            console.log(err);
+          }
+        });
+      });
     });
   }
