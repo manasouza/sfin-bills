@@ -82,6 +82,13 @@ var self = module.exports = {
   convertToCurrency : function(value) {
     // TODO: receive format options by config file
     return _s.numberFormat((value/currency_factor),2,',','.');
+  },
+
+  isAtCurrentMonth : function(current_month, last_updated_month) {
+    if (current_month.toLowerCase() !== last_updated_month.toLowerCase()) {
+      return false
+    }
+    return true
   }
 }
 
@@ -114,9 +121,8 @@ var self = module.exports = {
   		var current_month = m().format('MMMM/YYYY')
   		console.log('[INFO] current_month: ' + current_month)
       var last_updated_month_cell = cells[cells.length -1];
-  		// TODO: TEST seems that m().isAfter is not working as expected
-  		console.log(m().isAfter(m(last_updated_month_cell.numericValue)));
-      if (!isAtCurrentMonth(current_month)) {
+        console.log(m().isAfter(m(last_updated_month_cell.numericValue)));
+      if (!self.isAtCurrentMonth(current_month, last_updated_month_cell.value)) {
         console.log('[INFO] Current month ' + current_month + ' differs from ' + last_month);
         callback(current_month, last_updated_month_cell.row, last_updated_month_cell.col);
       } else {
@@ -124,13 +130,6 @@ var self = module.exports = {
         working_col = last_updated_month_cell.col;
       }
   	});
-  }
-
-  function isAtCurrentMonth(current_month) {
-    if (current_month.toLowerCase() !== last_updated_month_cell.value.toLowerCase()
-    && m().isAfter(m(last_updated_month_cell.numericValue))) {
-
-    }
   }
 
   function workingRows(category_col, data_map, callback) {

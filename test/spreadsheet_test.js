@@ -1,5 +1,6 @@
-var expect = require('expect.js');
-var assert = require('assert');
+var expect = require('expect.js')
+var assert = require('assert')
+var m = require('moment')
 var spreadsheet = require('../spreadsheet')
 describe('Spreadsheet Test', function() {
   describe('Expect currency values converted', function() {
@@ -33,13 +34,21 @@ describe('Spreadsheet Test', function() {
   });
   describe('Expect expense months correctly identified', function() {
     it('should return true if sheet month column is equal to current month', function() {
-
+      // GIVEN
+      var current_month = 'Abril/2017'
+      var sheet_column_month = 'Abril/2017'
+      // WHEN
+      var result = spreadsheet.isAtCurrentMonth(current_month, sheet_column_month)
+      // THEN
+      expect(result).to.be(true)
     });
     it('should return false if sheet month column is greather than current month', function() {
 
     });
     it('should return false if sheet month column is lesser than current month', function() {
-
+      // GIVEN
+      var current_month = m().format('MMMM/YYYY')
+      var sheet_column_month = 'Março/2017'
     });
   });
 });
