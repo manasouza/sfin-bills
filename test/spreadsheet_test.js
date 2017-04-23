@@ -43,12 +43,22 @@ describe('Spreadsheet Test', function() {
       expect(result).to.be(true)
     });
     it('should return false if sheet month column is greather than current month', function() {
-
+      // GIVEN
+      var current_month = 'Fevereiro/2017'
+      var sheet_column_month = 'Março/2017'
+      // WHEN
+      var result = spreadsheet.isAtCurrentMonth(current_month, sheet_column_month)
+      // THEN
+      expect(result).to.be(false)
     });
     it('should return false if sheet month column is lesser than current month', function() {
       // GIVEN
       var current_month = m().format('MMMM/YYYY')
       var sheet_column_month = 'Março/2017'
+      // WHEN
+      var result = spreadsheet.isAtCurrentMonth(current_month, sheet_column_month)
+      // THEN
+      expect(result).to.be(false)
     });
   });
 });
