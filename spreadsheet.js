@@ -26,7 +26,7 @@ var self = module.exports = {
   	    bills_sheet = info.worksheets[0];
   	  	console.log('[INFO] sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
         // TODO: 2 is the months row
-  			monthReference(2, createNewColumns);
+  			monthReference(2);
         // TODO: 3 is the categories column
         workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
           category_value_map.forEach(function(value,key) {
@@ -80,7 +80,7 @@ var self = module.exports = {
     callback(current_values);
   }
 
-  function monthReference(month_row_num, callback) {
+  function monthReference(month_row_num) {
   	// TODO: externalize locale
   	m.locale('pt-BR')
   	bills_sheet.getCells({
@@ -94,15 +94,12 @@ var self = module.exports = {
   		// TODO: externalize date format
   		var current_month = m().format('MMMM/YYYY')
   		console.log('[INFO] current_month: ' + current_month)
-      var last_updated_month_cell = cells[cells.length -1];
-        console.log(m().isAfter(m(last_updated_month_cell.numericValue)));
-      if (self.isAtCurrentMonth(current_month, last_updated_month_cell.value)) {
-        console.log('[INFO] Already at current month');
-        working_col = last_updated_month_cell.col;
-      } else {
-        console.log('[INFO] Current month ' + current_month + ' differs from ' + last_month);
-        callback(current_month, last_updated_month_cell.row, last_updated_month_cell.col);
-      }
+      cells.forEach(function (cell) {
+        if (current_month === cell.value) {
+          console.log(cell)
+          working_col = cell.col;
+        }
+      });
   	});
   }
 
@@ -112,18 +109,16 @@ var self = module.exports = {
       'max-col': category_col,
       'return-empty': false
     }, function (err, cells) {
-      console.log(data_map.keys());
-      console.log(data_map.values());
+      console.log("[INFO] category names: " + data_map.keys());
+      console.log("[INFO] category values: " + data_map.values());
         var category_rows = [];
         var category_value_map = new Map();
         cells.forEach(function (cell) {
           if (data_map.has(cell.value)) {
-            console.log(cell.value);
             category_rows.push(cell.row);
             category_value_map.set(cell.row, cell.value)
           }
         });
-        console.log('CATEGORIES MAP: ' + category_value_map);
         callback(data_map, category_rows, category_value_map);
     });
   }
