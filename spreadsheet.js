@@ -26,10 +26,11 @@ var self = module.exports = {
   	    bills_sheet = info.worksheets[0];
   	  	console.log('[INFO] sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
         // TODO: 2 is the months row
-  			monthReference(2);
+  			monthReference(2, validateFoundMonthReference);
         // TODO: 3 is the categories column
         workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
           category_value_map.forEach(function(value,key) {
+            console.log("working_col: " + working_col)
             bills_sheet.getCells({
               'min-row': key,
           		'max-row': key,
@@ -37,6 +38,10 @@ var self = module.exports = {
               'max-col': working_col,
               'return-empty' : true
               }, function (err, cells) {
+                if (err != null) {
+                  console.log("[ERROR] %s", err);
+                  return;
+                }
                 cells.forEach(function (cell) {
                   console.log('cell row: ' + cell.row)
                   console.log('value arg: ' + value);
@@ -80,7 +85,7 @@ var self = module.exports = {
     callback(current_values);
   }
 
-  function monthReference(month_row_num) {
+  function monthReference(month_row_num, cb) {
   	// TODO: externalize locale
   	m.locale('pt-BR')
   	bills_sheet.getCells({
@@ -93,14 +98,26 @@ var self = module.exports = {
       }
   		// TODO: externalize date format
   		var current_month = m().format('MMMM/YYYY')
+      var cells_processed = 0;
   		console.log('[INFO] current_month: ' + current_month)
       cells.forEach(function (cell) {
         if (current_month === cell.value) {
           console.log(cell)
           working_col = cell.col;
         }
+        cells_processed++;
+        if (cells_processed === cells.length) {
+          cb();
+        }
       });
   	});
+  }
+  
+  function validateFoundMonthReference() {
+    if (!working_col) {
+      console.log("[ERROR] month reference cell not found, so working_col not set");
+      process.exit(1)
+    }
   }
 
   function workingRows(category_col, data_map, callback) {
