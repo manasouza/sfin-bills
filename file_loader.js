@@ -1,3 +1,5 @@
+/*jshint esversion: 6 */
+
 var fs = require('fs');
 var s = require("./node_modules/underscore.string");
 var spreadsheet = require('./spreadsheet');
@@ -14,19 +16,19 @@ var self = module.exports = {
       var service = google.drive('v2');
 
       // TODO: this date is in UTC timezone. Use moment.js to handle datetime
-      var date = new Date().toISOString();
-      var fdate = date.substr(0,date.indexOf('T'));
-      console.log('Today is ' + fdate);
-
-      this.getFilesByFilter('Comprovante', service, auth);
+      var date = new Date();
+      var today_date = convertToOnlyDateInISO(date);
+      var first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
+      var file_id = 'Comprovante';
+      var query_filter = `title contains \'${file_id}\' and modifiedDate >= \'${first_day_of_month_date}\' and modifiedDate <= \'${today_date}\'`;
+      console.log(`[INFO] Today is ${today_date}`);
+      this.getFilesByFilter(query_filter, service, auth);
     },
 
     getFilesByFilter : function(filter, service, auth) {
         service.files.list({
           auth: auth,
-          maxResults: 10,
-      	//q: 'title contains \'Comprovante\' and modifiedDate > \''+fdate+'\''
-          q: 'title contains \'Comprovante\''
+          q: filter
         }, function(err, response) {
           if (err) {
             console.log('The API returned an error: ' + err);
@@ -88,4 +90,8 @@ var self = module.exports = {
       receipt_name = file_title.substring(first_limiter_occur, last_limiter_occur);
       return s.trim(receipt_name);
     }
+}
+
+function convertToOnlyDateInISO(date) {
+  return date.toISOString().substr(0,date.toISOString().indexOf('T'));
 }
