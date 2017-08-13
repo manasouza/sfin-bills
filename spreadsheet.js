@@ -26,18 +26,17 @@ var self = module.exports = {
   	    bills_sheet = info.worksheets[0];
   	  	console.log('[INFO] sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
         // TODO: 2 is the months row
-  			var is_valid = monthReference(2, validateFoundMonthReference);
-        if (is_valid) {
+  			monthReference(2, validateFoundMonthReference);
         // TODO: 3 is the categories column
-          workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
-            category_value_map.forEach(function(value,key) {
-              console.log("working_col: " + working_col)
-              bills_sheet.getCells({
-                'min-row': key,
-            		'max-row': key,
-            		'min-col': working_col,
-                'max-col': working_col,
-                'return-empty' : true
+        workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
+          category_value_map.forEach(function(value,key) {
+            console.log("working_col: " + working_col)
+            bills_sheet.getCells({
+              'min-row': key,
+          		'max-row': key,
+          		'min-col': working_col,
+              'max-col': working_col,
+              'return-empty' : true
               }, function (err, cells) {
                 if (err != null) {
                   console.log("[ERROR] %s", err);
@@ -54,10 +53,9 @@ var self = module.exports = {
                 });
               });
             });
-          });
-        }
+          })
   	  });
-  	});
+  	})
   },
 
   convertToCurrency : function(value) {
@@ -109,12 +107,7 @@ var self = module.exports = {
         }
         cells_processed++;
         if (cells_processed === cells.length) {
-          if (!working_col) {
-            console.log("[WARN] month reference cell not found, so working_col not set");
-            return false;
-          } else {
-            return true;
-          }
+          cb();
         }
       });
   	});
@@ -122,7 +115,8 @@ var self = module.exports = {
   
   function validateFoundMonthReference() {
     if (!working_col) {
-      console.log("[WARN] month reference cell not found, so working_col not set");
+      console.log("[ERROR] month reference cell not found, so working_col not set");
+      process.exit(1)
     }
   }
 
