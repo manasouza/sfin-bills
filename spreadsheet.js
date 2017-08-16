@@ -1,7 +1,10 @@
+/*jshint esversion: 6 */
+
 var GoogleSpreadsheet = require("google-spreadsheet");
 var fs = require('fs');
 var m = require('moment')
 var _s = require("./node_modules/underscore.string");
+var _ = require('underscore');
 // var async = require('async');
 
 // service account created credentials
@@ -30,7 +33,7 @@ var self = module.exports = {
         // TODO: 3 is the categories column
         workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
           category_value_map.forEach(function(value,key) {
-            console.log("working_col: " + working_col)
+            console.log("key: "+key+"/ working_col: " + working_col)
             bills_sheet.getCells({
               'min-row': key,
           		'max-row': key,
@@ -45,17 +48,25 @@ var self = module.exports = {
                 cells.forEach(function (cell) {
                   console.log('cell row: ' + cell.row)
                   console.log('value arg: ' + value);
-                  cell.setValue(self.convertToCurrency(data_map.get(value)), function(err) {
+                  value = self.convertToCurrency(data_map.get(value));
+                  if (_.isEmpty(cell._value)) {
+                    cell.formula = `=${value}`;
+                  } else {
+                    cell.formula = `${cell.formula}+${value}`;
+                  }
+                  cell.save(function(err) {
                     if (err) {
-                      console.log("Error at cell.setValue: " + err);
+                      console.log("[ERROR] error updating spreadsheet: %s", err);
+                    } else {
+                      console.log("[INFO] spreadsheet cell updated");
                     }
                   });
                 });
               });
             });
-          })
+          });
   	  });
-  	})
+  	});
   },
 
   convertToCurrency : function(value) {
