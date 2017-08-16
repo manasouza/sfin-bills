@@ -34,5 +34,9 @@
     "sprintf-js": "~1.0.3",
     "underscore.string": "^3.3.4",
     "underscore": "^1.8.3"
+  },
+  "scripts": {
+    "start": "node sfin_bills_server.js",
+    "test": "mocha"
   }
 }
