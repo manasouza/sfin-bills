@@ -5,6 +5,7 @@ var s = require("./node_modules/underscore.string");
 var spreadsheet = require('./spreadsheet');
 // var HashMap = require('hashmap');
 var Map = require("collections/map");
+var List = require("collections/list");
 
 var self = module.exports = {
   /**
@@ -47,19 +48,26 @@ var self = module.exports = {
         for (var i = 0; i < files.length; i++) {
           var file = files[i];
           console.log('%s (%s)', file.title, file.id);
-          this.getBillingValue(file.title)
-          this.getReceiptName(file.title)
-          bills_map.set(receipt_name, billing_value);
+          this.getBillingValue(file.title);
+          this.getReceiptName(file.title);
+          if (bills_map.has(receipt_name)) {
+            bills_map.get(receipt_name).push(billing_value);
+          } else {
+            bills_map.set(receipt_name, new List([billing_value]));
+          }
         }
         fs.readFile('bills_data_map.json', function process(err, content) {
+          if (err) {
+            console.log("[ERROR] %s", err);
+          }
           var body = JSON.parse(content);
           spreadsheet_map = new Map();
-          bills_map.forEach(function(value, key) {
+          bills_map.forEach(function(valueList, key) {
             for (var key_value in body) {
               // verifies the key on bills_data_map that fits to receipt name
               if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
-                console.log('MAPPING: ' + body[key_value] + ' --- ' + key);
-                spreadsheet_map.set(body[key_value], value);
+                  console.log('[INFO] Mapping: %s -> %s:%s', body[key_value], key, valueList.toArray());
+                  spreadsheet_map.set(body[key_value], valueList);                  
                 break;
               }
             }
@@ -90,7 +98,7 @@ var self = module.exports = {
       receipt_name = file_title.substring(first_limiter_occur, last_limiter_occur);
       return s.trim(receipt_name);
     }
-}
+};
 
 function convertToOnlyDateInISO(date) {
   return date.toISOString().substr(0,date.toISOString().indexOf('T'));

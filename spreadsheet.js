@@ -32,11 +32,11 @@ var self = module.exports = {
   			monthReference(2, validateFoundMonthReference);
         // TODO: 3 is the categories column
         workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
-          category_value_map.forEach(function(value,key) {
-            console.log("key: "+key+"/ working_col: " + working_col)
+          category_value_map.forEach(function(billingName, sheetRow) {
+            console.log("key: "+billingName+"/ working_col: " + working_col)
             bills_sheet.getCells({
-              'min-row': key,
-          		'max-row': key,
+              'min-row': sheetRow,
+          		'max-row': sheetRow,
           		'min-col': working_col,
               'max-col': working_col,
               'return-empty' : true
@@ -47,13 +47,15 @@ var self = module.exports = {
                 }
                 cells.forEach(function (cell) {
                   console.log('cell row: ' + cell.row)
-                  console.log('value arg: ' + value);
-                  value = self.convertToCurrency(data_map.get(value));
-                  if (_.isEmpty(cell._value)) {
-                    cell.formula = `=${value}`;
-                  } else {
-                    cell.formula = `${cell.formula}+${value}`;
-                  }
+                  console.log('value arg: ' + billingName);
+                  data_map.get(billingName).forEach(function(value, listKey, collection) {
+                    value = self.convertToCurrency(value);
+                    if (_.isEmpty(cell._value)) {
+                      cell.formula = `=${value}`;
+                    } else {
+                      cell.formula = `${cell.formula}+${value}`;
+                    }
+                  });                  
                   cell.save(function(err) {
                     if (err) {
                       console.log("[ERROR] error updating spreadsheet: %s", err);
@@ -137,14 +139,15 @@ var self = module.exports = {
       'max-col': category_col,
       'return-empty': false
     }, function (err, cells) {
-      console.log("[INFO] category names: " + data_map.keys());
-      console.log("[INFO] category values: " + data_map.values());
+        if (err) {
+          console.log("[ERROR] %s", err);
+        }
         var category_rows = [];
         var category_value_map = new Map();
         cells.forEach(function (cell) {
           if (data_map.has(cell.value)) {
             category_rows.push(cell.row);
-            category_value_map.set(cell.row, cell.value)
+            category_value_map.set(cell.row, cell.value);
           }
         });
         callback(data_map, category_rows, category_value_map);
