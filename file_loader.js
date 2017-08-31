@@ -23,8 +23,9 @@ var self = module.exports = {
       var date = new Date();
       var today_date = convertToOnlyDateInISO(date);
       var first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
+      var first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
       var file_id = 'Comprovante';
-      var query_filter = `title contains \'${file_id}\' and modifiedDate >= \'${first_day_of_month_date}\' and modifiedDate <= \'${today_date}\'`;
+      var query_filter = `title contains \'${file_id}\' and modifiedDate >= \'${first_day_of_month_date}\' and modifiedDate < \'${first_day_of_next_month_date}\'`;
       console.log(`[INFO] Today is ${today_date}`);
       this.getFilesByFilter(query_filter, service, auth);
     },
