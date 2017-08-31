@@ -18,11 +18,9 @@ var bills_sheet;
 var working_col;
 var currency_factor = 100;
 
-// TODO: extract the column with all the group cost categories
-// TODO: create a comparison table for: "extracted file name x group cost name"
 var self = module.exports = {
 
-  updateSpreadsheet : function(data_map) {
+  updateSpreadsheet : function(data_map, saveProcessedFiles) {
   	my_sheet.useServiceAccountAuth(credentials, (err, token) => {
   		my_sheet.getInfo(function(err, info) {
   	    console.log('[INFO] Loaded doc: '+info.title+' by '+info.author.email);
@@ -62,6 +60,7 @@ var self = module.exports = {
                     } else {
                       console.log("[INFO] spreadsheet cell updated");
                     }
+                    saveProcessedFiles();
                   });
                 });
               });

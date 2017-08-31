@@ -2,10 +2,13 @@
 
 var fs = require('fs');
 var s = require("./node_modules/underscore.string");
-var spreadsheet = require('./spreadsheet');
-// var HashMap = require('hashmap');
 var Map = require("collections/map");
+var Dict = require("collections/dict");
 var List = require("collections/list");
+var loadedFilesMap = new Dict();
+
+var BluebirdPromise = require('bluebird');
+var spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
 
 var self = module.exports = {
   /**
@@ -43,18 +46,26 @@ var self = module.exports = {
       if (files.length == 0) {
         console.log('No files found.');
       } else {
-        bills_map = new Map();
+        bills_map = new Dict();
         console.log('Files:');
         for (var i = 0; i < files.length; i++) {
           var file = files[i];
-          console.log('%s (%s)', file.title, file.id);
-          this.getBillingValue(file.title);
-          this.getReceiptName(file.title);
-          if (bills_map.has(receipt_name)) {
-            bills_map.get(receipt_name).push(billing_value);
+          console.log('[INFO] %s (%s)', file.title, file.id);
+          if (!fileAlreadyProcessed(file)) {
+            this.getBillingValue(file.title);
+            this.getReceiptName(file.title);
+            if (bills_map.has(receipt_name)) {
+              bills_map.get(receipt_name).push(billing_value);
+            } else {
+              bills_map.set(receipt_name, new List([billing_value]));
+            }
           } else {
-            bills_map.set(receipt_name, new List([billing_value]));
+            console.log('[DEBUG] file already processed: %s', file.title);
           }
+        }
+        if (bills_map.length == 0) {
+          console.log('[INFO] no new files to process');
+          return;
         }
         fs.readFile('bills_data_map.json', function process(err, content) {
           if (err) {
@@ -72,7 +83,17 @@ var self = module.exports = {
               }
             }
           });
-          spreadsheet.updateSpreadsheet(spreadsheet_map);
+          spreadsheet.updateSpreadsheetAsync(spreadsheet_map)
+            .then((result) => {
+              for (var i = 0; i < files.length; i++) {
+                var file = files[i];
+                loadedFilesMap.set(file.id, file.title);
+              }
+              console.log('[INFO] %s files processed', files.length);
+            })
+            .catch((err) => {
+              console.log("[ERROR] updateSpreadsheet - %s", err);
+            });
         });
       }
     },
@@ -99,6 +120,14 @@ var self = module.exports = {
       return s.trim(receipt_name);
     }
 };
+
+function fileAlreadyProcessed(file) {
+  if (loadedFilesMap.has(file.id)) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 function convertToOnlyDateInISO(date) {
   return date.toISOString().substr(0,date.toISOString().indexOf('T'));
