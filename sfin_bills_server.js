@@ -14,7 +14,7 @@ var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
 var DRIVE_TOKEN_PATH = TOKEN_DIR + 'drive-nodejs-quickstart.json'
 
 // service account created credentials
-var spreadsheets_api_credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json')
+var spreadsheets_api_credentials = require('./SmartFinance-Bills-Beta-eb6d6507173d.json')
 
 var web_server = http.createServer(function (request, response) {
   // TODO: when loading the other js files, it was impossible to use 'require' function at them
