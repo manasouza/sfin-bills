@@ -52,7 +52,7 @@ function authorize(credentials, callback) {
   // Check if we have previously stored a token for Drive API.
   fs.readFile(DRIVE_TOKEN_PATH, function(err, token) {
     if (err) {
-      console.log("Get New Token")
+      console.log("[INFO] get new token")
       getNewToken(oauth2Client, callback);
     } else {
       oauth2Client.credentials = JSON.parse(token);
@@ -74,7 +74,7 @@ function getNewToken(oauth2Client, callback) {
     access_type: 'offline',
     scope: SCOPES
   });
-  console.log('Authorize this app by visiting this url: ', authUrl);
+  console.log('[INFO] Authorize this app by visiting this url: ', authUrl);
   var rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout
@@ -83,7 +83,7 @@ function getNewToken(oauth2Client, callback) {
     rl.close();
     oauth2Client.getToken(code, function(err, token) {
       if (err) {
-        console.log('Error while trying to retrieve access token', err);
+        console.log('[ERROR] Error while trying to retrieve access token', err);
         return;
       }
       oauth2Client.credentials = token;
@@ -107,5 +107,5 @@ function storeToken(token) {
     }
   }
   fs.writeFile(DRIVE_TOKEN_PATH, JSON.stringify(token));
-  console.log('Token stored to ' + DRIVE_TOKEN_PATH);
+  console.log('[INFO] token stored to ' + DRIVE_TOKEN_PATH);
 }
