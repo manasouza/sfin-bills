@@ -8,7 +8,9 @@ var _ = require('underscore');
 // var async = require('async');
 
 // service account created credentials
-var credentials = require('./SmartFinance-Bills-Beta-eb6d6507173d.json');
+var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
+    process.env.USERPROFILE) + '/.credentials/'
+var credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
 // spreadsheet key is the long id in the sheets URL
 // TODO: receive spreadsheet id as an argument (come from HTTP request for example)
 var my_sheet = new GoogleSpreadsheet('1zqc0BDV3l5wq7tEzJZF2GhFZUc4e213gaYcT3Zb3OyQ')
