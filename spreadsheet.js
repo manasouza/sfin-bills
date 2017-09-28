@@ -23,15 +23,13 @@ var self = module.exports = {
   updateSpreadsheet : function(data_map, saveProcessedFiles) {
   	my_sheet.useServiceAccountAuth(credentials, (err, token) => {
   		my_sheet.getInfo(function(err, info) {
-  	    console.log('[INFO] Loaded doc: '+info.title+' by '+info.author.email);
-  	    bills_sheet = info.worksheets[0];
-  	  	console.log('[INFO] sheet 1: '+bills_sheet.title+' '+bills_sheet.rowCount+'x'+bills_sheet.colCount);
+  	    console.log('[INFO] Loaded doc: %s on first sheet: %s', info.title, info.worksheets[0].title);
         // TODO: 2 is the months row
   			monthReference(2, validateFoundMonthReference);
         // TODO: 3 is the categories column
         workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
           category_value_map.forEach(function(billingName, sheetRow) {
-            console.log("key: "+billingName+"/ working_col: " + working_col)
+            console.log("[DEBUG] key: %s / working_col: %s", billingName, working_col);
             bills_sheet.getCells({
               'min-row': sheetRow,
           		'max-row': sheetRow,
@@ -44,8 +42,7 @@ var self = module.exports = {
                   return;
                 }
                 cells.forEach(function (cell) {
-                  console.log('cell row: ' + cell.row)
-                  console.log('value arg: ' + billingName);
+                  console.log('[DEBUG] cell row: %s / value: %s', cell.row, billingName)
                   data_map.get(billingName).forEach(function(value, listKey, collection) {
                     value = self.convertToCurrency(value);
                     if (_.isEmpty(cell._value)) {
@@ -77,11 +74,11 @@ var self = module.exports = {
 
   isAtCurrentMonth : function(current_month, last_updated_month) {
     if (current_month.toLowerCase() !== last_updated_month.toLowerCase()) {
-      return false
+      return false;
     }
-    return true
+    return true;
   }
-}
+};
 
 
   function iterateOver(iterator, callback) {
@@ -99,22 +96,21 @@ var self = module.exports = {
 
   function monthReference(month_row_num, cb) {
   	// TODO: externalize locale
-  	m.locale('pt-BR')
+  	m.locale('pt-BR');
   	bills_sheet.getCells({
   		'min-row': month_row_num,
   		'max-row': month_row_num,
   		'return-empty': false
   	}, function (err, cells) {
       if (err) {
-        console.log('Error: ' + err);
+        console.log('[ERROR] %s', err);
       }
   		// TODO: externalize date format
-  		var current_month = m().format('MMMM/YYYY')
+  		var current_month = m().format('MMMM/YYYY');
       var cells_processed = 0;
-  		console.log('[INFO] current_month: ' + current_month)
+  		console.log('[INFO] current_month: %s', current_month);
       cells.forEach(function (cell) {
         if (current_month === cell.value) {
-          console.log(cell)
           working_col = cell.col;
         }
         cells_processed++;
@@ -128,7 +124,7 @@ var self = module.exports = {
   function validateFoundMonthReference() {
     if (!working_col) {
       console.log("[ERROR] month reference cell not found, so working_col not set");
-      process.exit(1)
+      process.exit(1);
     }
   }
 

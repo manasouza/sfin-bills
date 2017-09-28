@@ -36,7 +36,7 @@ var self = module.exports = {
           q: filter
         }, function(err, response) {
           if (err) {
-            console.log('The API returned an error: ' + err);
+            console.log('[ERROR] The API returned an error: %s', err);
             return;
           }
           self.processFiles(response.items);
@@ -104,13 +104,11 @@ var self = module.exports = {
       // receipt name could have parcels between parenthesis
       billing_value = s.strLeftBack(billing_value, "(");
       billing_value = s.strLeftBack(billing_value, ".");
-      var parcels_index = billing_value.indexOf("(");
       // TODO: test parcels value on receipt value
-      console.log('parcels: '+parcels_index)
+      var parcels_index = billing_value.indexOf("(");
       if (parcels_index > -1) {
         billing_value = billing_value.substring(parcels_index, billing_value.length);
       }
-      console.log('billing value = ' + billing_value);
       return s.trim(billing_value);
     },
 
