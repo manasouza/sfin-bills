@@ -9,11 +9,11 @@ var _ = require('underscore');
 
 // service account created credentials
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-    process.env.USERPROFILE) + '/.credentials/'
+    process.env.USERPROFILE) + '/.credentials/';
 var credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
 // spreadsheet key is the long id in the sheets URL
 // TODO: receive spreadsheet id as an argument (come from HTTP request for example)
-var my_sheet = new GoogleSpreadsheet('1zqc0BDV3l5wq7tEzJZF2GhFZUc4e213gaYcT3Zb3OyQ')
+var my_sheet = new GoogleSpreadsheet('1zqc0BDV3l5wq7tEzJZF2GhFZUc4e213gaYcT3Zb3OyQ');
 var bills_sheet;
 var working_col;
 var currency_factor = 100;
@@ -23,7 +23,8 @@ var self = module.exports = {
   updateSpreadsheet : function(data_map, saveProcessedFiles) {
   	my_sheet.useServiceAccountAuth(credentials, (err, token) => {
   		my_sheet.getInfo(function(err, info) {
-  	    console.log('[INFO] Loaded doc: %s on first sheet: %s', info.title, info.worksheets[0].title);
+        bills_sheet = info.worksheets[0];
+  	    console.log('[INFO] Loaded doc: %s on first sheet: %s', info.title, bills_sheet.title);
         // TODO: 2 is the months row
   			monthReference(2, validateFoundMonthReference);
         // TODO: 3 is the categories column
