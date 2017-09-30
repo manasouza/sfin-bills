@@ -2,7 +2,7 @@
 
 var GoogleSpreadsheet = require("google-spreadsheet");
 var fs = require('fs');
-var m = require('moment')
+var m = require('moment');
 var _s = require("./node_modules/underscore.string");
 var _ = require('underscore');
 // var async = require('async');
@@ -43,7 +43,7 @@ var self = module.exports = {
                   return;
                 }
                 cells.forEach(function (cell) {
-                  console.log('[DEBUG] cell row: %s / value: %s', cell.row, billingName)
+                  console.log('[DEBUG] cell row: %s / value: %s', cell.row, billingName);
                   data_map.get(billingName).forEach(function(value, listKey, collection) {
                     value = self.convertToCurrency(value);
                     if (_.isEmpty(cell._value)) {
@@ -70,7 +70,7 @@ var self = module.exports = {
 
   convertToCurrency : function(value) {
     // TODO: receive format options by config file
-    return _s.numberFormat((value/currency_factor),2,',','.');
+    return _s.numberFormat((value/currency_factor),2,',','');
   },
 
   isAtCurrentMonth : function(current_month, last_updated_month) {
