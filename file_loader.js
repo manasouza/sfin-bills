@@ -55,11 +55,7 @@ var self = module.exports = {
           if (!fileAlreadyProcessed(file)) {
             this.getBillingValue(file.title);
             this.getReceiptName(file.title);
-            if (bills_map.has(receipt_name)) {
-              bills_map.get(receipt_name).push(billing_value);
-            } else {
-              bills_map.set(receipt_name, new List([billing_value]));
-            }
+            bills_map.set(receipt_name, billing_value);
           } else {
             console.log('[DEBUG] file already processed: %s', file.title);
           }
@@ -74,12 +70,16 @@ var self = module.exports = {
           }
           var body = JSON.parse(content);
           spreadsheet_map = new Map();
-          bills_map.forEach(function(valueList, key) {
+          bills_map.forEach(function(value, key) {
             for (var key_value in body) {
               // verifies the key on bills_data_map that fits to receipt name
               if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
-                  console.log('[INFO] Mapping: %s -> %s:%s', body[key_value], key, valueList.toArray());
-                  spreadsheet_map.set(body[key_value], valueList);                  
+                console.log('[INFO] Mapping: %s -> %s:%s', body[key_value], key, value);
+                if (spreadsheet_map.has(body[key_value])) {
+                  spreadsheet_map.get(body[key_value]).push(value);                  
+                } else {                  
+                  spreadsheet_map.add(new List([value]), body[key_value]);
+                }
                 break;
               }
             }
