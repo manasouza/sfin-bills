@@ -111,7 +111,7 @@ var self = module.exports = {
       var cells_processed = 0;
   		console.log('[INFO] current_month: %s', current_month);
       cells.forEach(function (cell) {
-        if (current_month === cell.value) {
+        if (current_month.toLowerCase() === cell.value.toLowerCase()) {
           working_col = cell.col;
         }
         cells_processed++;
