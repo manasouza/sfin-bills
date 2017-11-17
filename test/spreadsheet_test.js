@@ -25,7 +25,7 @@ describe('Spreadsheet Test', function() {
     it('convert an integer value greater than thousand', function() {
       // GIVEN
       var value = 151200
-      var expected_value = '1.512,00'
+      var expected_value = '1512,00'
       // WHEN
       currency_value = spreadsheet.convertToCurrency(value)
       // THEN
