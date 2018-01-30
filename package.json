@@ -1,6 +1,6 @@
 {
   "name": "sfin-bills",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "interprets some file name at Google Drive and add this value to some Google Spreadsheet",
   "main": "sfin_bills_server.js",
   "scripts": {
@@ -28,13 +28,16 @@
     "collections": "^5.0.5",
     "expect.js": "^0.3.1",
     "google-auth-library": "^0.10.0",
-    "google-spreadsheet": "^2.0.3",
+    "google-spreadsheet": "^2.0.4",
     "googleapis": "^17.1.0",
-    "hashmap": "^2.0.6",
-    "mocha": "^3.2.0",
-    "moment": "^2.17.0",
+    "hashmap": "^2.3.0",
+    "mocha": "^3.5.3",
+    "moment": "^2.19.2",
     "sprintf-js": "~1.0.3",
     "underscore": "^1.8.3",
     "underscore.string": "^3.3.4"
+  },
+  "devDependencies": {
+    "eslint": "^4.12.0"
   }
 }
