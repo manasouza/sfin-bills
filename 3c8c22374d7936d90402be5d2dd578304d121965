@@ -1,0 +1,5 @@
+first functional release
+integrates to specific spreadsheet tab
+with a predefided yearly month structure
+predefined categories
+not externalized configs (file filters, month coordinates, date format, spreadsheet_id)
