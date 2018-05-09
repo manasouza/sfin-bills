@@ -5,4 +5,5 @@ metadata:
 spec:
   strategy:
     jenkinsPipelineStrategy:
-
+      jenkinsfile: Jenkinsfile
+    type: JenkinsPipeline
