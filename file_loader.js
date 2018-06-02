@@ -47,15 +47,20 @@ var self = module.exports = {
       if (files.length == 0) {
         console.log('No files found.');
       } else {
-        bills_map = new Dict();
+        // #1 Verify unprocessed files got from GDrive and set then to Map
+        var bills_map = new Dict();
         console.log('Files:');
         for (var i = 0; i < files.length; i++) {
           var file = files[i];
           console.log('[INFO] %s (%s)', file.title, file.id);
           if (!fileAlreadyProcessed(file)) {
-            this.getBillingValue(file.title);
-            this.getReceiptName(file.title);
-            bills_map.set(receipt_name, billing_value);
+            const billing_value = this.getBillingValue(file.title);
+            const receipt_name = this.getReceiptName(file.title);
+            if (bills_map.has(receipt_name)) {
+              bills_map.set(receipt_name+'_'+i, billing_value);
+            } else {
+              bills_map.set(receipt_name, billing_value);
+            }
           } else {
             console.log('[DEBUG] file already processed: %s', file.title);
           }
@@ -64,21 +69,22 @@ var self = module.exports = {
           console.log('[INFO] no new files to process');
           return;
         }
+        // #2 Based on Map previously set, do the mapping with the base bills mapping file
         fs.readFile('bills_data_map.json', function process(err, content) {
           if (err) {
             console.log("[ERROR] %s", err);
           }
-          var body = JSON.parse(content);
+          var bills_data_map_json = JSON.parse(content);
           spreadsheet_map = new Map();
           bills_map.forEach(function(value, key) {
-            for (var key_value in body) {
+            for (var key_value in bills_data_map_json) {
               // verifies the key on bills_data_map that fits to receipt name
               if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
-                console.log('[INFO] Mapping: %s -> %s:%s', body[key_value], key, value);
-                if (spreadsheet_map.has(body[key_value])) {
-                  spreadsheet_map.get(body[key_value]).push(value);                  
+                console.log('[INFO] Mapping: %s -> %s:%s', bills_data_map_json[key_value], key, value);
+                if (spreadsheet_map.has(bills_data_map_json[key_value])) {
+                  spreadsheet_map.get(bills_data_map_json[key_value]).push(value);                  
                 } else {                  
-                  spreadsheet_map.add(new List([value]), body[key_value]);
+                  spreadsheet_map.add(new List([value]), bills_data_map_json[key_value]);
                 }
                 break;
               }
