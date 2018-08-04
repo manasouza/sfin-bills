@@ -33,7 +33,7 @@
     "google-spreadsheet": "^2.0.4",
     "googleapis": "^17.1.0",
     "hashmap": "^2.3.0",
-    "mocha": "^3.5.3",
+    "mocha": "^4.1.0",
     "moment": "^2.19.2",
     "sprintf-js": "~1.0.3",
     "underscore": "^1.8.3",
