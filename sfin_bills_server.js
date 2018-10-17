@@ -1,12 +1,13 @@
 const http = require('http');
 const fs = require('fs');
 const readline = require('readline');
+const googleAuth = require('google-auth-library');
 const { google } = require('googleapis');
 
 const listSpecificModified = require('./file_loader').listSpecificModified;
 
 // If modifying these scopes, delete token.json.
-const SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly'];
+const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
 const CRED_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const TOKEN_PATH = CRED_DIR + 'token.json';
 
@@ -33,7 +34,8 @@ console.log("Web server is up")
  */
 function authorize(credentials, callback) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
-  const oAuth2Client = new google.auth.OAuth2(
+  const auth = new googleAuth();
+  const oAuth2Client = new auth.OAuth2(
     client_id, client_secret, redirect_uris[0]);
 
   // Check if we have previously stored a token.

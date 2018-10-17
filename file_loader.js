@@ -1,5 +1,7 @@
 /*jshint esversion: 6 */
 
+const google = require('googleapis');
+
 var fs = require('fs');
 var s = require("./node_modules/underscore.string");
 var Map = require("collections/map");
@@ -9,8 +11,6 @@ var loadedFilesMap = new Dict();
 
 var BluebirdPromise = require('bluebird');
 var spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
-
-const { google } = require('googleapis');
 
 var self = module.exports = {
   /**
