@@ -29,7 +29,7 @@
     "expect.js": "^0.3.1",
     "google-auth-library": "^0.10.0",
     "google-spreadsheet": "^2.0.4",
-    "googleapis": "^17.1.0",
+    "googleapis": "^27.0.0",
     "hashmap": "^2.3.0",
     "mocha": "^3.5.3",
     "moment": "^2.19.2",
