@@ -10,13 +10,15 @@ var loadedFilesMap = new Dict();
 var BluebirdPromise = require('bluebird');
 var spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
 
+const { google } = require('googleapis');
+
 var self = module.exports = {
   /**
    * Lists the files which name contains 'Comprovante' and were modified today
    *
    * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
    */
-    listSpecificModified : function(auth, google) {
+    listSpecificModified : function(auth) {
       var service = google.drive('v2');
 
       // TODO: this date is in UTC timezone. Use moment.js to handle datetime
@@ -27,7 +29,7 @@ var self = module.exports = {
       var file_id = 'Comprovante';
       var query_filter = `title contains \'${file_id}\' and modifiedDate >= \'${first_day_of_month_date}\' and modifiedDate < \'${first_day_of_next_month_date}\'`;
       console.log(`[INFO] Today is ${today_date}`);
-      this.getFilesByFilter(query_filter, service, auth);
+      self.getFilesByFilter(query_filter, service, auth);
     },
 
     getFilesByFilter : function(filter, service, auth) {
@@ -37,7 +39,7 @@ var self = module.exports = {
         }, function(err, response) {
           if (err) {
             console.log('[ERROR] The API returned an error: %s', err);
-            return;
+            process.exit(1);
           }
           self.processFiles(response.items);
       });
