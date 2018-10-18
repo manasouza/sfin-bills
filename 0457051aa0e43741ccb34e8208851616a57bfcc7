@@ -1,0 +1,4 @@
+Snyk support added
+bump up google-spreadsheet and googleapis
+fix module.export and self references
+Dockerfile added
