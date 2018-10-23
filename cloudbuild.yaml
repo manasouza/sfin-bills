@@ -1,0 +1,20 @@
+steps:
+- name: 'gcr.io/cloud-builders/npm'
+  args: ['install']
+- name: 'gcr.io/cloud-builders/npm'
+  volumes:
+  - name: 'cred_vol'
+    path: '/builder/home/.credentials'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - | 
+        echo '{}' > /builder/home/.credentials/SmartFinance-Bills-Beta-eb6d6507173d.json
+- name: 'gcr.io/cloud-builders/npm'
+  args: ['test']
+  volumes:
+  - name: 'cred_vol'
+    path: '/builder/home/.credentials'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'gcr.io/$PROJECT_ID/sfinbills:v0', '.']
+images: ['gcr.io/$PROJECT_ID/sfinbills:v0']

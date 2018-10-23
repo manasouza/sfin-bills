@@ -3,12 +3,6 @@ version: v1.12.0
 ignore: {}
 # patches apply the minimum changes required to fix a vulnerability
 patch:
-  'npm:hoek:20180212':
-    - google-spreadsheet > google-auth-library > request > hawk > hoek:
-        patched: '2018-06-19T05:38:28.401Z'
-    - google-spreadsheet > google-auth-library > request > hawk > boom > hoek:
-        patched: '2018-06-19T05:38:28.401Z'
-    - google-spreadsheet > google-auth-library > request > hawk > sntp > hoek:
-        patched: '2018-06-19T05:38:28.401Z'
-    - google-spreadsheet > google-auth-library > request > hawk > cryptiles > boom > hoek:
-        patched: '2018-06-19T05:38:28.401Z'
+  'npm:lodash:20180130':
+    - google-spreadsheet > lodash:
+        patched: '2018-07-03T05:38:29.877Z'

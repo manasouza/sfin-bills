@@ -1,13 +1,13 @@
 {
   "name": "sfin-bills",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "interprets some file name at Google Drive and add this value to some Google Spreadsheet",
   "main": "sfin_bills_server.js",
   "scripts": {
     "start": "node sfin_bills_server.js",
     "test": "mocha",
     "snyk-protect": "snyk protect",
-    "prepublish": "npm run snyk-protect"
+    "prepare": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -23,22 +23,22 @@
   },
   "homepage": "https://github.com/manasouza/sfin-bills#readme",
   "engines": {
-    "node": "4.4.7"
+    "node": "6.11.5"
   },
   "dependencies": {
     "bluebird": "^3.5.0",
     "collections": "^5.0.5",
     "expect.js": "^0.3.1",
     "google-auth-library": "^0.10.0",
-    "google-spreadsheet": "^2.0.4",
-    "googleapis": "^17.1.0",
+    "google-spreadsheet": "2.0.6",
+    "googleapis": "^24.0.0",
     "hashmap": "^2.3.0",
     "mocha": "^4.1.0",
     "moment": "^2.19.2",
     "sprintf-js": "~1.0.3",
     "underscore": "^1.8.3",
     "underscore.string": "^3.3.4",
-    "snyk": "^1.83.0"
+    "snyk": "^1.88.0"
   },
   "devDependencies": {
     "eslint": "^4.12.0"
