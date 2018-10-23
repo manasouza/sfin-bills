@@ -1,6 +1,9 @@
+process.env.spreadsheet = 'test'
+
 var expect = require('expect.js');
 var assert = require('assert');
 var fileLoader = require('../file_loader')
+
 describe('FileLoader', function() {
   describe('Expect no files found', function() {
     it('nothing to do if no files found', function() {

@@ -1,7 +1,10 @@
+process.env.spreadsheet = 'test'
+
 var expect = require('expect.js')
 var assert = require('assert')
 var m = require('moment')
 var spreadsheet = require('../spreadsheet')
+
 describe('Spreadsheet Test', function() {
   describe('Expect currency values converted', function() {
     it('convert an integer value less than thousand', function() {
