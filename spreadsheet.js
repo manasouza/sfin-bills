@@ -5,7 +5,7 @@ var fs = require('fs');
 var m = require('moment');
 var _s = require("./node_modules/underscore.string");
 var _ = require('underscore');
-// var async = require('async');
+var async = require('async');
 
 // service account created credentials
 var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
@@ -23,46 +23,25 @@ var self = module.exports = {
   	my_sheet.useServiceAccountAuth(credentials, (err, token) => {
   		my_sheet.getInfo(function(err, info) {
         bills_sheet = info.worksheets[0];
-  	    console.log('[INFO] Loaded doc: %s on first sheet: %s', info.title, bills_sheet.title);
-        // TODO: 2 is the months row
-  			monthReference(2, validateFoundMonthReference);
-        // TODO: 3 is the categories column
-        workingRows(3, data_map, function(data_map, category_rows, category_value_map) {
-          category_value_map.forEach(function(billingName, sheetRow) {
-            console.log("[DEBUG] key: %s / working_col: %s", billingName, working_col);
-            bills_sheet.getCells({
-              'min-row': sheetRow,
-          		'max-row': sheetRow,
-          		'min-col': working_col,
-              'max-col': working_col,
-              'return-empty' : true
-              }, function (err, cells) {
-                if (err != null) {
-                  console.log("[ERROR] %s", err);
-                  return;
-                }
-                cells.forEach(function (cell) {
-                  console.log('[DEBUG] cell row: %s / value: %s', cell.row, billingName);
-                  data_map.get(billingName).forEach(function(value, listKey, collection) {
-                    value = self.convertToCurrency(value);
-                    if (_.isEmpty(cell._value)) {
-                      cell.formula = `=${value}`;
-                    } else {
-                      cell.formula = `${cell.formula}+${value}`;
-                    }
-                  });                  
-                  cell.save(function(err) {
-                    if (err) {
-                      console.log("[ERROR] error updating spreadsheet: %s", err);
-                    } else {
-                      console.log("[INFO] spreadsheet cell updated");
-                    }
-                    saveProcessedFiles();
-                  });
-                });
-              });
-            });
-          });
+        console.log('[INFO] Loaded doc: %s on first sheet: %s', info.title, bills_sheet.title);
+        async.series([
+          function (callback) {
+            console.log('[DEBUG] getting month reference');
+            // TODO: 2 is the months row
+            monthReference(2, validateFoundMonthReference);
+            callback(null, 'monthReference');
+          },
+          function (callback) {
+            console.log('[DEBUG] find cells and set values');
+            // TODO: 3 is the categories column
+            workingRows(3, data_map, setCellValueForEachCategory);
+            callback(null, 'workingRows');
+          }
+        ],
+        function (err, result) {
+          console.log(result);
+          saveProcessedFiles();
+        });
   	  });
   	});
   },
@@ -148,6 +127,42 @@ var self = module.exports = {
         callback(data_map, category_rows, category_value_map);
     });
   }
+
+function setCellValueForEachCategory(data_map, category_rows, category_value_map) {
+  category_value_map.forEach(function (billingName, sheetRow) {
+    console.log("[DEBUG] key: %s / working_col: %s", billingName, working_col);
+    bills_sheet.getCells({
+      'min-row': sheetRow,
+      'max-row': sheetRow,
+      'min-col': working_col,
+      'max-col': working_col,
+      'return-empty': true
+    }, function (err, cells) {
+      if (err != null) {
+        console.log("[ERROR] %s", err);
+        return;
+      }
+      cells.forEach(function (cell) {
+        console.log('[DEBUG] cell row: %s / value: %s', cell.row, billingName);
+        data_map.get(billingName).forEach(function (value, listKey, collection) {
+          value = self.convertToCurrency(value);
+          if (_.isEmpty(cell._value)) {
+            cell.formula = `=${value}`;
+          } else {
+            cell.formula = `${cell.formula}+${value}`;
+          }
+        });
+        cell.save(function (err) {
+          if (err) {
+            console.log("[ERROR] error updating spreadsheet: %s", err);
+          } else {
+            console.log("[INFO] spreadsheet cell updated");
+          }
+        });
+      });
+    });
+  });
+}
 
   function createNewColumns(month, row, col) {
     console.log('monthReference callback: ' + month +', '+ row +', '+ col);

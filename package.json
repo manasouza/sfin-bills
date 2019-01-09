@@ -38,6 +38,7 @@
     "sprintf-js": "~1.0.3",
     "underscore": "^1.8.3",
     "underscore.string": "^3.3.4",
+    "async": "~2.6.1",
     "snyk": "^1.88.0"
   },
   "devDependencies": {
