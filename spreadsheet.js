@@ -32,9 +32,9 @@ var self = module.exports = {
             callback(null, 'monthReference');
           },
           function (callback) {
-            console.log('[DEBUG] find cells and set values');
-            // TODO: 3 is the categories column
-            workingRows(3, data_map, setCellValueForEachCategory);
+            console.log('[DEBUG] find category cells and set values');
+            // TODO: 1 is the categories column
+            workingRows(1, data_map, setCellValueForEachCategory);
             callback(null, 'workingRows');
           }
         ],
@@ -129,6 +129,9 @@ var self = module.exports = {
   }
 
 function setCellValueForEachCategory(data_map, category_rows, category_value_map) {
+  if (category_value_map.length < 1) {
+    console.warn("[WARN] category values not mapped. Stucked here");
+  }
   category_value_map.forEach(function (billingName, sheetRow) {
     console.log("[DEBUG] key: %s / working_col: %s", billingName, working_col);
     bills_sheet.getCells({
