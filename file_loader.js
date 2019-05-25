@@ -1,6 +1,6 @@
 /*jshint esversion: 6 */
 
-const google = require('googleapis');
+const {google} = require('googleapis');
 
 var fs = require('fs');
 var s = require("./node_modules/underscore.string");
@@ -19,7 +19,10 @@ var self = module.exports = {
    * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
    */
     listSpecificModified : function(auth) {
-      var service = google.drive('v2');
+      var service = google.drive({
+        version: 'v3',
+        auth: auth
+      });
 
       // TODO: this date is in UTC timezone. Use moment.js to handle datetime
       var date = new Date();
@@ -27,22 +30,21 @@ var self = module.exports = {
       var first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
       var first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
       var file_id = 'Comprovante';
-      var query_filter = `title contains \'${file_id}\' and modifiedDate >= \'${first_day_of_month_date}\' and modifiedDate < \'${first_day_of_next_month_date}\'`;
+      var query_filter = `name contains \'${file_id}\' and modifiedTime >= \'${first_day_of_month_date}\' and modifiedTime < \'${first_day_of_next_month_date}\'`;
+      
       console.log(`[INFO] Today is ${today_date}`);
       self.getFilesByFilter(query_filter, service, auth);
     },
 
-    getFilesByFilter : function(filter, service, auth) {
-        service.files.list({
-          auth: auth,
-          q: filter
-        }, function(err, response) {
-          if (err) {
-            console.log('[ERROR] The API returned an error: %s', err);
-            process.exit(1);
-          }
-          self.processFiles(response.items);
-      });
+    getFilesByFilter : async function(filter, service, auth) {
+        try {
+          const params = {pageSize: 10};
+          params.q = filter;
+          const response = await service.files.list(params);
+          self.processFiles(response.data.files);
+        } catch (error) {
+          console.log('[ERROR] Could not fetch files: %s', error)
+        }
     },
 
     processFiles : function(files) {
@@ -54,17 +56,18 @@ var self = module.exports = {
         console.log('Files:');
         for (var i = 0; i < files.length; i++) {
           var file = files[i];
-          console.log('[INFO] %s (%s)', file.title, file.id);
+          const fileName = file.name
+          console.log('[INFO] %s (%s)', fileName, file.id);
           if (!fileAlreadyProcessed(file)) {
-            const billing_value = this.getBillingValue(file.title);
-            const receipt_name = this.getReceiptName(file.title);
+            const billing_value = this.getBillingValue(fileName);
+            const receipt_name = this.getReceiptName(fileName);
             if (bills_map.has(receipt_name)) {
               bills_map.set(receipt_name+'_'+i, billing_value);
             } else {
               bills_map.set(receipt_name, billing_value);
             }
           } else {
-            console.log('[DEBUG] file already processed: %s', file.title);
+            console.log('[DEBUG] file already processed: %s', fileName);
           }
         }
         if (bills_map.length == 0) {
@@ -96,7 +99,7 @@ var self = module.exports = {
             .then((result) => {
               for (var i = 0; i < files.length; i++) {
                 var file = files[i];
-                loadedFilesMap.set(file.id, file.title);
+                loadedFilesMap.set(file.id, file.name);
               }
               console.log('[INFO] %s files processed', files.length);
             })
