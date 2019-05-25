@@ -1,23 +1,25 @@
 /*jshint esversion: 6 */
 
-var GoogleSpreadsheet = require("google-spreadsheet");
-var fs = require('fs');
-var m = require('moment');
-var _s = require("./node_modules/underscore.string");
-var _ = require('underscore');
-var async = require('async');
+const GoogleSpreadsheet = require("google-spreadsheet");
+const fs = require('fs');
+const m = require('moment');
+const _s = require("./node_modules/underscore.string");
+const _ = require('underscore');
+const async = require('async');
 
 // service account created credentials
-var TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
+const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
     process.env.USERPROFILE) + '/.credentials/';
-var credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
-// spreadsheet key is the long id in the sheets URL
-var my_sheet = new GoogleSpreadsheet(process.env.spreadsheet);
-var bills_sheet;
-var working_col;
-var currency_factor = 100;
+const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
 
+// spreadsheet key is the long id in the sheets URL
+const my_sheet = new GoogleSpreadsheet(process.env.spreadsheet);
+// The column where category elements of spreadsheet are located
 const CATEGORY_COLUMN = process.env.category_column
+
+const currency_factor = 100;
+let working_col;
+let bills_sheet;
 
 var self = module.exports = {
 
@@ -61,7 +63,6 @@ var self = module.exports = {
               }
               cells_processed++;
               if (cells_processed === cells.length) {
-                console.log('working_col: ' + working_col);
                 callback(null);
               }
             });

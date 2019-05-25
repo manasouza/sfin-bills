@@ -2,15 +2,15 @@
 
 const {google} = require('googleapis');
 
-var fs = require('fs');
-var s = require("./node_modules/underscore.string");
-var Map = require("collections/map");
-var Dict = require("collections/dict");
-var List = require("collections/list");
-var loadedFilesMap = new Dict();
+const fs = require('fs');
+const s = require("./node_modules/underscore.string");
+const Map = require("collections/map");
+const Dict = require("collections/dict");
+const List = require("collections/list");
+const loadedFilesMap = new Dict();
 
-var BluebirdPromise = require('bluebird');
-var spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
+const BluebirdPromise = require('bluebird');
+const spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
 
 var self = module.exports = {
   /**
@@ -19,27 +19,29 @@ var self = module.exports = {
    * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
    */
     listSpecificModified : function(auth) {
-      var service = google.drive({
+      const service = google.drive({
         version: 'v3',
         auth: auth
       });
 
       // TODO: this date is in UTC timezone. Use moment.js to handle datetime
-      var date = new Date();
-      var today_date = convertToOnlyDateInISO(date);
-      var first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
-      var first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
-      var file_id = 'Comprovante';
-      var query_filter = `name contains \'${file_id}\' and modifiedTime >= \'${first_day_of_month_date}\' and modifiedTime < \'${first_day_of_next_month_date}\'`;
+      let date = new Date();
+      const today_date = convertToOnlyDateInISO(date);
+      const first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
+      const first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
+      const file_id = 'Comprovante';
+      const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'${first_day_of_month_date}\' and modifiedTime < \'${first_day_of_next_month_date}\'`;
       
       console.log(`[INFO] Today is ${today_date}`);
-      self.getFilesByFilter(query_filter, service, auth);
+      self.getFilesByFilter(query_filter, service);
     },
 
-    getFilesByFilter : async function(filter, service, auth) {
+    getFilesByFilter : async function(filter, service) {
         try {
-          const params = {pageSize: 10};
-          params.q = filter;
+          const params = {
+            pageSize: 20,
+            q: filter
+          };
           const response = await service.files.list(params);
           self.processFiles(response.data.files);
         } catch (error) {
@@ -52,10 +54,10 @@ var self = module.exports = {
         console.log('No files found.');
       } else {
         // #1 Verify unprocessed files got from GDrive and set then to Map
-        var bills_map = new Dict();
+        let bills_map = new Dict();
         console.log('Files:');
-        for (var i = 0; i < files.length; i++) {
-          var file = files[i];
+        for (let i = 0; i < files.length; i++) {
+          let file = files[i];
           const fileName = file.name
           console.log('[INFO] %s (%s)', fileName, file.id);
           if (!fileAlreadyProcessed(file)) {
@@ -79,10 +81,10 @@ var self = module.exports = {
           if (err) {
             console.log("[ERROR] %s", err);
           }
-          var bills_data_map_json = JSON.parse(content);
+          const bills_data_map_json = JSON.parse(content);
           spreadsheet_map = new Map();
           bills_map.forEach(function(value, key) {
-            for (var key_value in bills_data_map_json) {
+            for (const key_value in bills_data_map_json) {
               // verifies the key on bills_data_map that fits to receipt name
               if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
                 console.log('[INFO] Mapping: %s -> %s:%s', bills_data_map_json[key_value], key, value);
@@ -97,8 +99,8 @@ var self = module.exports = {
           });
           spreadsheet.updateSpreadsheetAsync(spreadsheet_map)
             .then((result) => {
-              for (var i = 0; i < files.length; i++) {
-                var file = files[i];
+              for (let i = 0; i < files.length; i++) {
+                let file = files[i];
                 loadedFilesMap.set(file.id, file.name);
               }
               console.log('[INFO] %s files processed', files.length);
@@ -116,7 +118,7 @@ var self = module.exports = {
       billing_value = s.strLeftBack(billing_value, "(");
       billing_value = s.strLeftBack(billing_value, ".");
       // TODO: test parcels value on receipt value
-      var parcels_index = billing_value.indexOf("(");
+      let parcels_index = billing_value.indexOf("(");
       if (parcels_index > -1) {
         billing_value = billing_value.substring(parcels_index, billing_value.length);
       }
