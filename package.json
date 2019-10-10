@@ -1,6 +1,6 @@
 {
   "name": "sfin-bills",
-  "version": "0.4.0",
+  "version": "0.3.0",
   "description": "interprets some file name at Google Drive and add this value to some Google Spreadsheet",
   "main": "sfin_bills_server.js",
   "scripts": {
@@ -38,7 +38,7 @@
     "underscore": "^1.8.3",
     "underscore.string": "^3.3.4",
     "async": "~2.6.1",
-    "snyk": "^1.232.0"
+    "snyk": "^1.234.0"
   },
   "devDependencies": {
     "eslint": "^4.12.0"
