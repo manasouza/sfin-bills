@@ -1,0 +1,3 @@
+Snyk security updates:
+* Man-in-the-Middle (MitM): Vulnerability in https-proxy-agent 2.2.1
+* Prototype Pollution: Vulnerability in lodash 4.17.11
