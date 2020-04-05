@@ -1,0 +1,4 @@
+GOOGLE_CLIENT_ID: 299405398705-si3v1mcfkh0g6v3a0ve0rjjuvmbihksi.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET: 1o-e9tpjIKLQONdPEQK9tKJU
+GOOGLE_CALLBACK_URL: https://us-central1-smartfinance-bills-beta.cloudfunctions.net/auth_callback
+spreadsheet: 14Isj1FGGDTmq_lzjqrb_pkU58rRXEEQTpABOMaqGxKY
