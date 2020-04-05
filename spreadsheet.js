@@ -8,9 +8,9 @@ const _ = require('underscore');
 const async = require('async');
 
 // service account created credentials
-const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-    process.env.USERPROFILE) + '/.credentials/';
-const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
+// const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
+//     process.env.USERPROFILE) + '/.credentials/';
+const credentials = require('./smartfinancebills.json');
 
 // spreadsheet key is the long id in the sheets URL
 const my_sheet = new GoogleSpreadsheet(process.env.spreadsheet);

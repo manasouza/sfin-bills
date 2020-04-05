@@ -2,7 +2,6 @@
   "name": "sfin-bills",
   "version": "0.4.0",
   "description": "interprets some file name at Google Drive and add this value to some Google Spreadsheet",
-  "main": "sfin_bills_server.js",
   "scripts": {
     "start": "node sfin_bills_server.js",
     "test": "mocha",
