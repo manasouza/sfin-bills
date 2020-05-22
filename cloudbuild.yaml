@@ -1,7 +1,8 @@
 steps:
-- name: 'gcr.io/cloud-builders/npm'
+- name: node:10.16.0
+  entrypoint: npm
   args: ['install']
-- name: 'gcr.io/cloud-builders/npm'
+- name: node:10.16.0
   volumes:
   - name: 'cred_vol'
     path: '/builder/home/.credentials'
@@ -10,7 +11,8 @@ steps:
     - '-c'
     - | 
         echo '{}' > /builder/home/.credentials/SmartFinance-Bills-Beta-eb6d6507173d.json
-- name: 'gcr.io/cloud-builders/npm'
+- name: node:10.16.0
+  entrypoint: npm
   args: ['test']
   volumes:
   - name: 'cred_vol'
