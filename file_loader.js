@@ -7,10 +7,16 @@ const s = require("./node_modules/underscore.string");
 const Map = require("collections/map");
 const Dict = require("collections/dict");
 const List = require("collections/list");
-const loadedFilesMap = new Dict();
+const Firestore = require('@google-cloud/firestore');
 
 const BluebirdPromise = require('bluebird');
 const spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
+
+const db = new Firestore({
+  projectId: 'smartfinance-bills-beta',
+  keyFilename: process.env.credentials,
+});
+
 
 var self = module.exports = {
   /**
@@ -45,7 +51,10 @@ var self = module.exports = {
           const response = await service.files.list(params);
           self.processFiles(response.data.files);
         } catch (error) {
-          console.log('[ERROR] Could not fetch files: %s', error)
+          console.log('[ERROR] Could not fetch files')
+          if (error.message.includes("grant")) {
+            console.log('[ERROR] %s. Check token expiration', error)
+          }
         }
     },
 
@@ -101,7 +110,8 @@ var self = module.exports = {
             .then((result) => {
               for (let i = 0; i < files.length; i++) {
                 let file = files[i];
-                loadedFilesMap.set(file.id, file.name);
+                let billsData = db.collection('bills').doc(file.id)
+                billsData.set({file_name: file.name})
               }
               console.log('[INFO] %s files processed', files.length);
             })
@@ -133,12 +143,15 @@ var self = module.exports = {
     }
 };
 
-function fileAlreadyProcessed(file) {
-  if (loadedFilesMap.has(file.id)) {
-    return true;
-  } else {
-    return false;
-  }
+async function fileAlreadyProcessed(file) {
+  const querySnapshot = await db.collection('bills').get()
+  querySnapshot.forEach((doc) => {
+    if (doc.id == file.id) {
+      console.log('[DEBUG %s => %s', doc.id, doc.data())
+      return true
+    }
+  })
+  return false
 }
 
 function convertToOnlyDateInISO(date) {
