@@ -51,14 +51,14 @@ var self = module.exports = {
           const response = await service.files.list(params);
           self.processFiles(response.data.files);
         } catch (error) {
-          console.log('[ERROR] Could not fetch files')
+          console.log('[ERROR] Could not fetch files: %s', error.message)
           if (error.message.includes("grant")) {
             console.log('[ERROR] %s. Check token expiration', error)
           }
         }
     },
 
-    processFiles : function(files) {
+    processFiles : async function(files) {
       if (files.length == 0) {
         console.log('No files found.');
       } else {
@@ -69,7 +69,7 @@ var self = module.exports = {
           let file = files[i];
           const fileName = file.name
           console.log('[INFO] %s (%s)', fileName, file.id);
-          if (!fileAlreadyProcessed(file)) {
+          if (!await fileAlreadyProcessed(file)) {
             const billing_value = this.getBillingValue(fileName);
             const receipt_name = this.getReceiptName(fileName);
             if (bills_map.has(receipt_name)) {
