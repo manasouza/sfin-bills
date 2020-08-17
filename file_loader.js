@@ -144,14 +144,15 @@ var self = module.exports = {
 };
 
 async function fileAlreadyProcessed(file) {
+  let alreadyProcessed = false
   const querySnapshot = await db.collection('bills').get()
   querySnapshot.forEach((doc) => {
     if (doc.id == file.id) {
       console.log('[DEBUG %s => %s', doc.id, doc.data())
-      return true
+      alreadyProcessed = true
     }
   })
-  return false
+  return alreadyProcessed
 }
 
 function convertToOnlyDateInISO(date) {
