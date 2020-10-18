@@ -12,6 +12,9 @@ from google.protobuf import json_format
 SPREADSHEET_ID = "1zqc0BDV3l5wq7tEzJZF2GhFZUc4e213gaYcT3Zb3OyQ"
 SPREADSHEET_TAB = 'Projeção'
 
+ROOT_BUCKET = 'sfinbills-pdfs'
+BILL_FULL_PATH = 'gs://{}/{}'
+
 SHEETS_API_SCOPE = ['https://spreadsheets.google.com/feeds',
                     'https://www.googleapis.com/auth/drive']
 
@@ -34,37 +37,48 @@ bills = ['Água', 'Luz']
 
 
 def main_entry(request):
+    category_column = 3
     # data = base64.b64decode(event['data']).decode('utf-8')
     # payload = json.loads(data)
-    # gcs_source_uri=payload['bucket_source_file']
-    gcs_source_uri = 'gs://sfinbills/RFATURA_DIR_FR2FAT16__95_0000_235202004652902.PDF'
-    # gcs_destination_uri=payload['bucket_destination']
-    gcs_destination_uri = 'gs://sfinbills/output'
-    category_column = 3
-
-    import ipdb;ipdb.set_trace()
-
-    # TODO: adapt from trigger from GCS
+    # gcs_file_uri=payload['bucket_source_file']
+    # gcs_file_uri = 'gs://sfinbills/RFATURA_DIR_FR2FAT16__95_0000_235202004652902.PDF'
     # extract file name
-    pdf_file = gcs_source_uri[gcs_source_uri.rfind('/')+1:]
+    # pdf_file = gcs_file_uri[gcs_file_uri.rfind('/')+1:]
+    # gcs_destination_uri=payload['bucket_destination']
+    gcs_destination_uri = 'gs://{}/output/'.format(ROOT_BUCKET)
+    gcs_source_uri = 'gs://{}'.format(ROOT_BUCKET)
+
+    import ipdb;
+    ipdb.set_trace()
+
+    bucket = storage_client.get_bucket(ROOT_BUCKET)
+    most_recent_bill = _get_most_recent_bill(bucket)
+
+    import ipdb;
+    ipdb.set_trace()
+    # TODO: adapt from trigger from GCS
     # detect
     for bill_category in bills:
-        if _get_for_agua(pdf_file):
+        if _get_for_agua(most_recent_bill):
             detected_category = bill_category
-        elif _get_for_luz(pdf_file):
+            break
+        elif _get_for_luz(most_recent_bill):
             detected_category = bill_category
+            break
+
+    # VISION API
+    # Supported mime_types are: 'application/pdf' and 'image/tiff'
+    send_bill_file_and_set_output(BILL_FULL_PATH.format(ROOT_BUCKET, most_recent_bill), gcs_destination_uri)
+
+    import ipdb; ipdb.set_trace()
+    # Once the request has completed and the output has been
+    # written to GCS, we can list all the output files.
+    bill_content = get_bill_content(gcs_destination_uri)
 
     # AUTH
     creds_key_json = get_auth_key()
 
-    # VISION API
-    # Supported mime_types are: 'application/pdf' and 'image/tiff'
-    # send_bill_file_and_set_output(gcs_source_uri, gcs_destination_uri)
-
-    # Once the request has completed and the output has been
-    # written to GCS, we can list all the output files.
-    # bill_content = get_bill_content(gcs_destination_uri)
-
+    import ipdb;ipdb.set_trace()
     # GSPREAD
     main_worksheet = get_spreadsheet(creds_key_json)
     # retrieve cell rows that needs update
@@ -86,6 +100,17 @@ def main_entry(request):
     print('update column: '+str(update_column))
 
     main_worksheet.update_cell(update_row, update_column, 'R$ 78,9')
+
+
+def _get_most_recent_bill(bucket, most_recent_bill=None):
+    arr = {}
+    for pdf_file in bucket.list_blobs():
+        print(str(pdf_file) + " / " + str(pdf_file.time_created))
+        for created in arr.keys():
+            if pdf_file.time_created > created:
+                most_recent_bill = pdf_file.name
+        arr[pdf_file.time_created] = pdf_file.name
+    return most_recent_bill
 
 
 def get_spreadsheet(creds_key_json):
