@@ -1,7 +1,7 @@
 import json
 import locale
 import re
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 import gspread
 from google.cloud import storage
@@ -35,6 +35,24 @@ def _get_for_luz(pdf_file=None):
 # bills = {'Água': _get_for_agua(), 'Luz': _get_for_luz()}
 bills = ['Água', 'Luz']
 
+def _retrieve_bill_category(pdf_file):
+    if pdf_file.startswith('RFATURA_DIR_FR2FAT16'):
+        return 'Água'
+    elif re.search('boleto_[\d\s]+', pdf_file):
+        return 'Luz'
+    else:
+        raise NotImplementedError
+
+def _retrieve_bill_value(bill_content, category):
+    if category == 'Água':
+        value = re.search('R\$\n(\d,)', bill_content).group(1)
+        return value
+    elif category == 'Luz':
+        value = re.search('TOTAL A PAGAR \(R\$\)\n(.*)\n', bill_content).group(1)
+        return value
+    else:
+        raise NotImplementedError
+
 
 def main_entry(request):
     category_column = 3
@@ -48,23 +66,12 @@ def main_entry(request):
     gcs_destination_uri = 'gs://{}/output/'.format(ROOT_BUCKET)
     gcs_source_uri = 'gs://{}'.format(ROOT_BUCKET)
 
-    import ipdb;
-    ipdb.set_trace()
-
     bucket = storage_client.get_bucket(ROOT_BUCKET)
     most_recent_bill = _get_most_recent_bill(bucket)
 
     import ipdb;
     ipdb.set_trace()
-    # TODO: adapt from trigger from GCS
-    # detect
-    for bill_category in bills:
-        if _get_for_agua(most_recent_bill):
-            detected_category = bill_category
-            break
-        elif _get_for_luz(most_recent_bill):
-            detected_category = bill_category
-            break
+    detected_category = _retrieve_bill_category(most_recent_bill)
 
     # VISION API
     # Supported mime_types are: 'application/pdf' and 'image/tiff'
@@ -74,6 +81,7 @@ def main_entry(request):
     # Once the request has completed and the output has been
     # written to GCS, we can list all the output files.
     bill_content = get_bill_content(gcs_destination_uri)
+    bill_value = _retrieve_bill_value(bill_content, detected_category)
 
     # AUTH
     creds_key_json = get_auth_key()
@@ -102,14 +110,17 @@ def main_entry(request):
     main_worksheet.update_cell(update_row, update_column, 'R$ 78,9')
 
 
+def _in_sub_folder(bucket_object_name):
+    return '/' in bucket_object_name
+
+
 def _get_most_recent_bill(bucket, most_recent_bill=None):
-    arr = {}
-    for pdf_file in bucket.list_blobs():
+    most_recent_date_created = datetime.now(tz=timezone.utc) - timedelta(days=7)
+    for pdf_file in bucket.list_blobs(prefix=''):
         print(str(pdf_file) + " / " + str(pdf_file.time_created))
-        for created in arr.keys():
-            if pdf_file.time_created > created:
-                most_recent_bill = pdf_file.name
-        arr[pdf_file.time_created] = pdf_file.name
+        if not _in_sub_folder(pdf_file.name) and pdf_file.time_created > most_recent_date_created:
+            most_recent_bill = pdf_file.name
+            most_recent_date_created = pdf_file.time_created
     return most_recent_bill
 
 
@@ -154,6 +165,7 @@ def get_bill_content(gcs_destination_uri):
     # The response contains more information:
     # annotation/pages/blocks/paragraphs/words/symbols
     # including confidence scores and bounding boxes
+
     print(u'Full text:\n{}'.format(
         annotation.text))
     return annotation.text
