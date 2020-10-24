@@ -1,5 +1,6 @@
 import json
 import locale
+import os
 import re
 from datetime import datetime, timedelta, timezone
 
@@ -11,8 +12,9 @@ from google.protobuf import json_format
 
 CONTENT_TYPE = 'application/pdf'
 
-SPREADSHEET_ID = "1zqc0BDV3l5wq7tEzJZF2GhFZUc4e213gaYcT3Zb3OyQ"
-SPREADSHEET_TAB = 'Projeção'
+SPREADSHEET_ID = os.getenv('spreadsheet')
+CATEGORY_COLUMN = os.getenv('category_column')
+SPREADSHEET_TAB = os.getenv('worksheet')
 
 ROOT_BUCKET = 'sfinbills-pdfs'
 BILL_FULL_PATH = 'gs://{}/{}'
@@ -28,35 +30,7 @@ locale.setlocale(locale.LC_TIME, "pt_BR.utf8")
 bills = ['Água', 'Luz']
 
 
-def _get_for_agua(pdf_file=None):
-    return pdf_file.startswith('RFATURA_DIR_FR2FAT16')
-
-
-def _get_for_luz(pdf_file=None):
-    return re.search('boleto_[\d\s]+', pdf_file)
-
-
-def _retrieve_bill_category(pdf_file):
-    if pdf_file.startswith('RFATURA_DIR_FR2FAT16'):
-        return 'Água'
-    elif re.search('boleto_[\d\s]+', pdf_file):
-        return 'Luz'
-    else:
-        raise NotImplementedError
-
-def _retrieve_bill_value(bill_content, category):
-    if category == 'Água':
-        value = re.search('TOTAL\nR\$\n(.*)', bill_content).group(1)
-        return value
-    elif category == 'Luz':
-        value = re.search('TOTAL A PAGAR \(R\$\)\n(.*)\n', bill_content).group(1)
-        return value
-    else:
-        raise NotImplementedError
-
-
 def main_entry(request):
-    category_column = 3
     # data = base64.b64decode(event['data']).decode('utf-8')
     # payload = json.loads(data)
     gcs_destination_uri = 'gs://{}/output/'.format(ROOT_BUCKET)
@@ -77,7 +51,7 @@ def main_entry(request):
     creds_key_json = _get_auth_key()
     # update Spreadsheet values
     main_worksheet = get_spreadsheet(creds_key_json)
-    update_row = _get_spreadsheet_row_to_update(category_column, detected_category, main_worksheet)
+    update_row = _get_spreadsheet_row_to_update(CATEGORY_COLUMN, detected_category, main_worksheet)
     update_column = _get_spreadsheet_column_to_update(main_worksheet)
     main_worksheet.update_cell(update_row, update_column, bill_value)
 
@@ -206,3 +180,31 @@ def _get_auth_key():
             print('creds {}'.format(creds))
             json_acct_info = json.loads(creds)
     return json_acct_info
+
+
+def _get_for_agua(pdf_file=None):
+    return pdf_file.startswith('RFATURA_DIR_FR2FAT16')
+
+
+def _get_for_luz(pdf_file=None):
+    return re.search('boleto_[\d\s]+', pdf_file)
+
+
+def _retrieve_bill_category(pdf_file):
+    if pdf_file.startswith('RFATURA_DIR_FR2FAT16'):
+        return 'Água'
+    elif re.search('boleto_[\d\s]+', pdf_file):
+        return 'Luz'
+    else:
+        raise NotImplementedError
+
+
+def _retrieve_bill_value(bill_content, category):
+    if category == 'Água':
+        value = re.search('TOTAL\nR\$\n(.*)', bill_content).group(1)
+        return value
+    elif category == 'Luz':
+        value = re.search('TOTAL A PAGAR \(R\$\)\n(.*)\n', bill_content).group(1)
+        return value
+    else:
+        raise NotImplementedError
