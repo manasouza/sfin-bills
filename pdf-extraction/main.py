@@ -17,6 +17,7 @@ CATEGORY_COLUMN = os.getenv('category_column')
 SPREADSHEET_TAB = os.getenv('worksheet')
 
 ROOT_BUCKET = 'sfinbills-pdfs'
+GCS_DESTINATION_URI = 'gs://{}/output/'.format(ROOT_BUCKET)
 BILL_FULL_PATH = 'gs://{}/{}'
 
 SHEETS_API_SCOPE = ['https://spreadsheets.google.com/feeds',
@@ -30,10 +31,9 @@ locale.setlocale(locale.LC_TIME, "pt_BR.utf8")
 bills = ['Água', 'Luz']
 
 
-def main_entry(request):
+def process_all_bills(request):
     # data = base64.b64decode(event['data']).decode('utf-8')
     # payload = json.loads(data)
-    gcs_destination_uri = 'gs://{}/output/'.format(ROOT_BUCKET)
 
     bucket = storage_client.get_bucket(ROOT_BUCKET)
     most_recent_bill = _get_most_recent_bill(bucket)
@@ -41,12 +41,16 @@ def main_entry(request):
 
     # VISION API
     # Supported mime_types are: 'application/pdf' and 'image/tiff'
-    send_bill_file_and_set_output(BILL_FULL_PATH.format(ROOT_BUCKET, most_recent_bill), gcs_destination_uri)
+    send_bill_file_and_set_output(BILL_FULL_PATH.format(ROOT_BUCKET, most_recent_bill), GCS_DESTINATION_URI)
 
     # Once the request has completed and the output has been  written to GCS, we can list all the output files.
-    bill_content = get_bill_content(gcs_destination_uri)
+    bill_content = get_bill_content(GCS_DESTINATION_URI)
     bill_value = _retrieve_bill_value(bill_content, detected_category)
 
+    _update_bill_value_in_spreadsheet(bill_value, detected_category)
+
+
+def _update_bill_value_in_spreadsheet(bill_value, detected_category):
     # get credentials for spreadsheet
     creds_key_json = _get_auth_key()
     # update Spreadsheet values
@@ -56,25 +60,37 @@ def main_entry(request):
     main_worksheet.update_cell(update_row, update_column, bill_value)
 
 
+def process_new_bill_upload(event, context):
+    print(event)
+    print('--------------------------------')
+    print(context)
+    new_bill = event['name']
+    print('new bill uploaded: %s', new_bill)
+    detected_category = _retrieve_bill_category(new_bill)
+    # VISION API
+    # Supported mime_types are: 'application/pdf' and 'image/tiff'
+    send_bill_file_and_set_output(BILL_FULL_PATH.format(ROOT_BUCKET, new_bill), GCS_DESTINATION_URI)
+    # Once the request has completed and the output has been  written to GCS, we can list all the output files.
+    bill_content = get_bill_content(GCS_DESTINATION_URI)
+    bill_value = _retrieve_bill_value(bill_content, detected_category)
+    _update_bill_value_in_spreadsheet(bill_value, detected_category)
+
+
 def _get_spreadsheet_column_to_update(main_worksheet):
     current_month = datetime.today().strftime("%B/%Y")
     print('current month: %s', current_month)
     for header_cell in main_worksheet.range(1, 1, 3, main_worksheet.col_count):
-        if header_cell.value:
-            print(header_cell.value)
         if header_cell.value.lower() == current_month:
             update_column = header_cell.col
-    print('update column: ' + str(update_column))
+            print('update column found: ' + str(update_column))
     return update_column
 
 
 def _get_spreadsheet_row_to_update(category_column, detected_category, worksheet):
     for category_cell in worksheet.range(1, category_column, worksheet.row_count, category_column):
-        if category_cell.value:
-            print(category_cell.value)
         if category_cell.value == detected_category:
             update_row = category_cell.row
-    print('update row: ' + str(update_row))
+            print('update row found: ' + str(update_row))
     return update_row
 
 
@@ -112,7 +128,7 @@ def get_bill_content(gcs_destination_uri):
     bucket = storage_client.get_bucket(bucket_name)
     # List objects with the given prefix.
     blob_list = list(bucket.list_blobs(prefix=prefix))
-    print('Output files:')
+    print('output files:')
     for blob in blob_list:
         print(blob.name)
 
@@ -177,7 +193,6 @@ def _get_auth_key():
         print(blob.name)
         if blob.name == sa_name:
             creds = blob.download_as_string()
-            print('creds {}'.format(creds))
             json_acct_info = json.loads(creds)
     return json_acct_info
 
