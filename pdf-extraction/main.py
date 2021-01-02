@@ -65,15 +65,18 @@ def process_new_bill_upload(event, context):
     print('--------------------------------')
     print(context)
     new_bill = event['name']
-    print('new bill uploaded: %s', new_bill)
-    detected_category = _retrieve_bill_category(new_bill)
-    # VISION API
-    # Supported mime_types are: 'application/pdf' and 'image/tiff'
-    send_bill_file_and_set_output(BILL_FULL_PATH.format(ROOT_BUCKET, new_bill), GCS_DESTINATION_URI)
-    # Once the request has completed and the output has been  written to GCS, we can list all the output files.
-    bill_content = get_bill_content(GCS_DESTINATION_URI)
-    bill_value = _retrieve_bill_value(bill_content, detected_category)
-    _update_bill_value_in_spreadsheet(bill_value, detected_category)
+    print('new bill uploaded: ', new_bill)
+    if new_bill.lower().endswith('.pdf'):
+        detected_category = _retrieve_bill_category(new_bill)
+        # VISION API
+        # Supported mime_types are: 'application/pdf' and 'image/tiff'
+        send_bill_file_and_set_output(BILL_FULL_PATH.format(ROOT_BUCKET, new_bill), GCS_DESTINATION_URI)
+        # Once the request has completed and the output has been  written to GCS, we can list all the output files.
+        bill_content = get_bill_content(GCS_DESTINATION_URI)
+        bill_value = _retrieve_bill_value(bill_content, detected_category)
+        _update_bill_value_in_spreadsheet(bill_value, detected_category)
+    else:
+        print('Skipping workflow for non pdf files')
 
 
 def _get_spreadsheet_column_to_update(main_worksheet):
