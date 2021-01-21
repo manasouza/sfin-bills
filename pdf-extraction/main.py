@@ -199,15 +199,18 @@ def _get_auth_key():
             json_acct_info = json.loads(creds)
     return json_acct_info
 
-
+# TODO: strategy pattern
 def _get_for_agua(pdf_file=None):
+    # TODO: REGEX pattern should be flexible (e.g. put into Firestore)
     return pdf_file.startswith('RFATURA_DIR_FR2FAT16')
 
-
+# TODO: strategy pattern
 def _get_for_luz(pdf_file=None):
+    # TODO: REGEX pattern should be flexible (e.g. put into Firestore)
     return re.search('boleto_[\d\s]+', pdf_file)
 
 
+# TODO: strategy pattern
 def _retrieve_bill_category(pdf_file):
     if pdf_file.startswith('RFATURA_DIR_FR2FAT16'):
         return 'Água'
@@ -216,13 +219,15 @@ def _retrieve_bill_category(pdf_file):
     else:
         raise NotImplementedError
 
-
+# TODO: strategy pattern
 def _retrieve_bill_value(bill_content, category):
     if category == 'Água':
+        # TODO: REGEX pattern should be flexible (e.g. put into Firestore)
         value = re.search('TOTAL\nR\$\n(.*)', bill_content).group(1)
         return value
     elif category == 'Luz':
-        value = re.search('TOTAL A PAGAR \(R\$\)\n(.*)\n', bill_content).group(1)
+        # TODO: REGEX pattern should be flexible (e.g. put into Firestore)
+        value = re.search('(TOTAL A PAGAR|Total a Pagar)\s\(R\$\)\n(.*?)\n', bill_content).group(2)
         return value
     else:
         raise NotImplementedError
