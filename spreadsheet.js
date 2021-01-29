@@ -1,6 +1,6 @@
 /*jshint esversion: 6 */
 
-const GoogleSpreadsheet = require("google-spreadsheet");
+const {GoogleSpreadsheet} = require("google-spreadsheet");
 const fs = require('fs');
 const m = require('moment');
 const _s = require("./node_modules/underscore.string");
