@@ -1,6 +1,6 @@
 {
   "name": "sfin-bills",
-  "version": "0.6.2",
+  "version": "0.7.0",
   "description": "interprets some file name at Google Drive and add this value to some Google Spreadsheet",
   "main": "sfin_bills_server.js",
   "scripts": {
