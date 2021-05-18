@@ -16,7 +16,9 @@ const db = new Firestore({
   projectId: 'smartfinance-bills-beta',
   keyFilename: process.env.credentials,
 });
+const billsCategoryMap = db.collection('bills_config').doc('mapping')
 
+const FILENAME_DATA_SEPARATOR = "_"
 
 var self = module.exports = {
   /**
@@ -37,7 +39,7 @@ var self = module.exports = {
       const first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
       const file_id = 'Comprovante';
       const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'${first_day_of_month_date}\' and modifiedTime < \'${first_day_of_next_month_date}\'`;
-      
+
       console.log(`[INFO] Today is ${today_date}`);
       self.getFilesByFilter(query_filter, service);
     },
@@ -85,28 +87,28 @@ var self = module.exports = {
           console.log('[INFO] no new files to process');
           return;
         }
-        // #2 Based on Map previously set, do the mapping with the base bills mapping file
-        fs.readFile('bills_data_map.json', function process(err, content) {
-          if (err) {
-            console.log("[ERROR] %s", err);
-          }
-          const bills_data_map_json = JSON.parse(content);
-          spreadsheet_map = new Map();
+        // #2 Based on Map previously set, do the mapping with the base bills mapping config
+        const mappingDoc = await billsCategoryMap.get()
+        spreadsheetMap = new Map()
+        if (!mappingDoc.exists) {
+          console.log('[ERROR] no mapping category found for bills')
+          return;
+        } else {
           bills_map.forEach(function(value, key) {
-            for (const key_value in bills_data_map_json) {
-              // verifies the key on bills_data_map that fits to receipt name
-              if (key.toUpperCase().indexOf(key_value.toUpperCase()) > -1) {
-                console.log('[INFO] Mapping: %s -> %s:%s', bills_data_map_json[key_value], key, value);
-                if (spreadsheet_map.has(bills_data_map_json[key_value])) {
-                  spreadsheet_map.get(bills_data_map_json[key_value]).push(value);                  
-                } else {                  
-                  spreadsheet_map.add(new List([value]), bills_data_map_json[key_value]);
-                }
-                break;
+            // verifies the key on bills_data_map that fits to receipt name
+            let categoryValue = mappingDoc.get(key.toLowerCase().split(FILENAME_DATA_SEPARATOR)[0])
+            if (categoryValue) {
+              console.log('[INFO] Mapping: %s -> %s:%s', categoryValue, key, value)
+              if (spreadsheetMap.has(categoryValue)) {
+                spreadsheetMap.get(categoryValue).push(value)
+              } else {
+                spreadsheetMap.add(new List([value]), categoryValue)
               }
+            } else {
+              console.log('[WARN] category not found: %s', key)
             }
-          });
-          spreadsheet.updateSpreadsheetAsync(spreadsheet_map)
+          })
+          spreadsheet.updateSpreadsheetAsync(spreadsheetMap)
             .then((result) => {
               for (let i = 0; i < files.length; i++) {
                 let file = files[i];
@@ -117,8 +119,8 @@ var self = module.exports = {
             })
             .catch((err) => {
               console.log("[ERROR] updateSpreadsheet - %s", err);
-            });
-        });
+            })
+        }
       }
     },
 
