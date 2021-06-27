@@ -19,6 +19,7 @@ const db = new Firestore({
 const billsCategoryMap = db.collection('bills_config').doc('mapping')
 
 const FILENAME_DATA_SEPARATOR = "_"
+const FILENAME_FIELDS_LENGTH = 3
 
 var self = module.exports = {
   /**
@@ -71,13 +72,18 @@ var self = module.exports = {
           let file = files[i];
           const fileName = file.name
           console.log('[INFO] %s (%s)', fileName, file.id);
+          console.log(fileName.split(FILENAME_DATA_SEPARATOR).length)
+          if (fileName.split(FILENAME_DATA_SEPARATOR).length < FILENAME_FIELDS_LENGTH) {
+            console.log('[INFO] skip filename: %s which is not according standards', fileName)
+            continue
+          }
           if (!await fileAlreadyProcessed(file)) {
-            const billing_value = this.getBillingValue(fileName);
-            const receipt_name = this.getReceiptName(fileName);
-            if (bills_map.has(receipt_name)) {
-              bills_map.set(receipt_name+'_'+i, billing_value);
+            const billingValue = this.getBillingValue(fileName);
+            const receiptName = this.getReceiptName(fileName);
+            if (bills_map.has(receiptName)) {
+              bills_map.set(receiptName+FILENAME_DATA_SEPARATOR+i, billingValue);
             } else {
-              bills_map.set(receipt_name, billing_value);
+              bills_map.set(receiptName, billingValue);
             }
           } else {
             console.log('[DEBUG] file already processed: %s', fileName);
@@ -94,18 +100,19 @@ var self = module.exports = {
           console.log('[ERROR] no mapping category found for bills')
           return;
         } else {
-          bills_map.forEach(function(value, key) {
+          bills_map.forEach(function(value, receiptName) {
             // verifies the key on bills_data_map that fits to receipt name
-            let categoryValue = mappingDoc.get(key.toLowerCase().split(FILENAME_DATA_SEPARATOR)[0])
+            console.log('[DEBUG] get config value from key: %s', receiptName)
+            let categoryValue = mappingDoc.get(receiptName.toLowerCase().split(FILENAME_DATA_SEPARATOR)[0])
             if (categoryValue) {
-              console.log('[INFO] Mapping: %s -> %s:%s', categoryValue, key, value)
+              console.log('[INFO] Mapping: %s -> %s:%s', categoryValue, receiptName, value)
               if (spreadsheetMap.has(categoryValue)) {
                 spreadsheetMap.get(categoryValue).push(value)
               } else {
                 spreadsheetMap.add(new List([value]), categoryValue)
               }
             } else {
-              console.log('[WARN] category not found: %s', key)
+              console.log('[WARN] category not found: %s', receiptName)
             }
           })
           spreadsheet.updateSpreadsheetAsync(spreadsheetMap)
