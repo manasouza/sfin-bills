@@ -35,7 +35,7 @@
     "googleapis": "49.0.0",
     "hashmap": "^2.3.0",
     "lodash": "^4.17.21",
-    "mocha": "^7.1.1",
+    "mocha": "^9.1.2",
     "moment": "^2.19.2",
     "snyk": "^1.439.0",
     "sprintf-js": "~1.0.3",
