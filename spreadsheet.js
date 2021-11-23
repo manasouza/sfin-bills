@@ -9,9 +9,10 @@ const async = require('async');
 const _l = require('lodash')
 
 // service account created credentials
-const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH ||
-    process.env.USERPROFILE) + '/.credentials/';
+// const credentials = process.env.credentials
+const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
+
 
 // spreadsheet key is the long id in the sheets URL
 const doc = new GoogleSpreadsheet(process.env.spreadsheet);
@@ -27,6 +28,8 @@ var self = module.exports = {
 
   updateSpreadsheet : async function(dataMap, saveProcessedFiles) {
     await doc.useServiceAccountAuth(credentials)
+    // const credentialsJson = JSON.parse(fs.readFileSync(credentials, 'utf8'))
+    // await doc.useServiceAccountAuth(credentialsJson)
     await doc.loadInfo()
     const billsSheet = doc.sheetsByIndex[0]
     console.log('[INFO] Loaded doc: %s on first sheet: %s', doc.title, billsSheet.title)
@@ -45,9 +48,11 @@ var self = module.exports = {
       // TODO: externalize locale
       m.locale('pt-BR')
       // TODO: externalize date format
+      // let current_month = m().subtract(1, 'months').format('MMMM/YYYY')
       let current_month = m().format('MMMM/YYYY')
       console.log('[INFO] current_month: %s', current_month)
       try {
+        // await billsSheet.loadCells({ startRowIndex: monthRowNum, startColumnIndex: 2})
         await billsSheet.loadCells({ startRowIndex: monthRowNum, startColumnIndex: 0})
         // it considers merged cells with null value
         for (let i = 1; i <= billsSheet.columnCount; i++) {
@@ -76,12 +81,10 @@ var self = module.exports = {
       console.log('[DEBUG] find category cells and set values');
       try {
         await billsSheet.loadCells({ startColumnIndex: categoryColumn})
-        // var category_rows = [];
         var categoryValueMap = new Map();
         for (let row = 1; row < billsSheet.rowCount; row++) {
           const cell = billsSheet.getCell(row, categoryColumn-1)
           if (dataMap.has(cell.value)) {
-            // category_rows.push(cell._row);
             categoryValueMap.set(cell._row, cell.value);
           }
         }
@@ -92,24 +95,30 @@ var self = module.exports = {
     }
 
     async function setCellValueForEachCategory(dataMap, categoryValueMap, workingColumn) {
+      let workingRow
       if (categoryValueMap.length < 1) {
         console.warn("[WARN] category values not mapped. Stucked here");
       }
-      _l.map(categoryValueMap.toObject(), function(billingName, workingRow) {
+      _l.map(categoryValueMap.toObject(), function(billingName, row) {
+        workingRow = row
         const workingCell = billsSheet.getCell(workingRow, workingColumn)
+        let formulaToUpdate = workingCell.formula
+        let cellValue = workingCell.value
         console.log('[DEBUG] cell row: %s / value: %s', workingCell._row, billingName);
-        console.log('[DEBUG] previous cell value: %s', workingCell.value)
-        _l.forEach(dataMap.get(billingName).toArray(), async function (value) {
-          currencyValue = self.convertToCurrency(value)
-          if (_.isEmpty(workingCell.value)) {
-            workingCell.formula = `=${currencyValue}`;
+        console.log('[DEBUG] previous cell value: %s', cellValue)
+        _l.forEach(dataMap.get(billingName).toArray(), async function (valueToUpdate) {
+          currencyValue = self.convertToCurrency(valueToUpdate)
+          if (_.isEmpty(_s.toString(cellValue))) {
+            formulaToUpdate = `=${currencyValue}`;
+            cellValue = `=${currencyValue}`
           } else {
-            workingCell.formula = `${workingCell.formula}+${currencyValue}`;
+            formulaToUpdate = `${formulaToUpdate}+${currencyValue}`;
           }
-          await billsSheet.saveUpdatedCells()
-          console.log('[DEBUG] current cell value: %s', workingCell.value)
         })
+        workingCell.formula = formulaToUpdate
       })
+      await billsSheet.saveUpdatedCells()
+      console.log('[DEBUG] current cell value: %s', billsSheet.getCell(workingRow, workingColumn).value)
     }
   },
 

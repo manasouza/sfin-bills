@@ -39,6 +39,7 @@ var self = module.exports = {
       const first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
       const first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
       const file_id = 'Comprovante';
+      // const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'2021-09-01\' and modifiedTime < \'2021-10-01\'`;
       const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'${first_day_of_month_date}\' and modifiedTime < \'${first_day_of_next_month_date}\'`;
 
       console.log(`[INFO] Today is ${today_date}`);
@@ -72,7 +73,6 @@ var self = module.exports = {
           let file = files[i];
           const fileName = file.name
           console.log('[INFO] %s (%s)', fileName, file.id);
-          console.log(fileName.split(FILENAME_DATA_SEPARATOR).length)
           if (fileName.split(FILENAME_DATA_SEPARATOR).length < FILENAME_FIELDS_LENGTH) {
             console.log('[INFO] skip filename: %s which is not according standards', fileName)
             continue
