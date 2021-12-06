@@ -108,7 +108,7 @@ var self = module.exports = {
         console.log('[DEBUG] previous cell value: %s', cellValue)
         _l.forEach(dataMap.get(billingName).toArray(), async function (valueToUpdate) {
           currencyValue = self.convertToCurrency(valueToUpdate)
-          if (_.isEmpty(_s.toString(cellValue))) {
+          if (_.isNull(cellValue) || _.isEmpty(_s.toString(cellValue))) {
             formulaToUpdate = `=${currencyValue}`;
             cellValue = `=${currencyValue}`
           } else {
