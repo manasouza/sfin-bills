@@ -26,12 +26,12 @@
     "node": "10.15.3"
   },
   "dependencies": {
-    "@google-cloud/firestore": "4.0.0",
-    "async": "~2.6.1",
-    "bluebird": "^3.5.0",
-    "collections": "^5.0.5",
+    "@google-cloud/firestore": "4.15.1",
+    "async": "2.6.3",
+    "bluebird": "3.7.2",
+    "collections": "5.1.13",
     "expect.js": "^0.3.1",
-    "google-spreadsheet": "3.1.15",
+    "google-spreadsheet": "3.2.0",
     "googleapis": "49.0.0",
     "hashmap": "^2.3.0",
     "lodash": "^4.17.21",
