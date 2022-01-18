@@ -1,3 +1,4 @@
+from argparse import ArgumentError
 import json
 import locale
 import os
@@ -65,7 +66,7 @@ def process_new_bill_upload(event, context):
     print('--------------------------------')
     print(context)
     new_bill = event['name']
-    print('new bill uploaded: ', new_bill)
+    print(f'new bill uploaded: {new_bill}')
     if new_bill.lower().endswith('.pdf'):
         detected_category = _retrieve_bill_category(new_bill)
         # VISION API
@@ -81,20 +82,22 @@ def process_new_bill_upload(event, context):
 
 def _get_spreadsheet_column_to_update(main_worksheet):
     current_month = datetime.today().strftime("%B/%Y")
-    print('current month: %s', current_month)
+    print(f'current month: {current_month}')
     for header_cell in main_worksheet.range(1, 1, 3, main_worksheet.col_count):
         if header_cell.value.lower() == current_month:
             update_column = header_cell.col
-            print('update column found: ' + str(update_column))
-    return update_column
+            print(f'update column found: {update_column}')
+    # TODO write unit test to validate flow when month/year date value not found (possibly due worksheet change or columns not update according current year)
+    raise ArgumentError('Could not find column in worksheet: ' + current_month)
 
 
 def _get_spreadsheet_row_to_update(category_column, detected_category, worksheet):
     for category_cell in worksheet.range(1, category_column, worksheet.row_count, category_column):
         if category_cell.value == detected_category:
             update_row = category_cell.row
-            print('update row found: ' + str(update_row))
-    return update_row
+            print(f'update row found: {update_row}')
+    # TODO write unit test to validate flow
+    raise ArgumentError('Could not find category in worksheet: ' + detected_category)
 
 
 def _in_sub_folder(bucket_object_name):
