@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/manasouza/sfin-bills#readme",
   "engines": {
-    "node": "10.15.3"
+    "node": "12.22.9"
   },
   "dependencies": {
     "@google-cloud/firestore": "4.15.1",
