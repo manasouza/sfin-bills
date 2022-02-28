@@ -1,0 +1,5 @@
+Security updates:
+* [High] node-fetch is vulnerable to Exposure of Sensitive Information to an Unauthorized Actor
+* [High] Prototype Pollution (y18n)
+[High] Exposure of sensitive information in follow-redirects
+[Moderate] Exposure of Sensitive Information to an Unauthorized Actor in follow-redirects
