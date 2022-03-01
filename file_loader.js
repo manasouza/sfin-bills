@@ -16,7 +16,10 @@ const db = new Firestore({
   projectId: 'smartfinance-bills-beta',
   keyFilename: process.env.credentials,
 });
-const billsCategoryMap = db.collection('bills_config').doc('mapping')
+const BILLS_COLLECTION = 'bills';
+const CONFIG_COLLECTION = 'bills_config';
+const CONFIG_DOCUMENT = 'mapping';
+const billsCategoryMap = db.collection(CONFIG_COLLECTION).doc(CONFIG_DOCUMENT)
 
 const FILENAME_DATA_SEPARATOR = "_"
 const FILENAME_FIELDS_LENGTH = 3
@@ -64,7 +67,7 @@ var self = module.exports = {
 
     processFiles : async function(files) {
       if (files.length == 0) {
-        console.log('No files found.');
+        console.log('[INFO] No files found.');
       } else {
         // #1 Verify unprocessed files got from GDrive and set then to Map
         let bills_map = new Dict();
@@ -119,7 +122,7 @@ var self = module.exports = {
             .then((result) => {
               for (let i = 0; i < files.length; i++) {
                 let file = files[i];
-                let billsData = db.collection('bills').doc(file.id)
+                let billsData = db.collection(BILLS_COLLECTION).doc(file.id)
                 billsData.set({file_name: file.name})
               }
               console.log('[INFO] %s files processed', files.length);
@@ -154,7 +157,7 @@ var self = module.exports = {
 
 async function fileAlreadyProcessed(file) {
   let alreadyProcessed = false
-  const querySnapshot = await db.collection('bills').get()
+  const querySnapshot = await db.collection(BILLS_COLLECTION).get()
   querySnapshot.forEach((doc) => {
     if (doc.id == file.id) {
       console.log('[DEBUG %s => %s', doc.id, doc.data())
