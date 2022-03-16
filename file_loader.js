@@ -28,11 +28,21 @@ var self = module.exports = {
    * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
    */
     listSpecificModified : function(auth) {
-      const service = google.drive({
-        version: 'v3',
-        auth: auth
-      });
-
+      let service
+      if (auth != null) {
+        service = google.drive({
+          version: 'v3',
+          auth: auth
+        });
+      } else {
+        service = google.drive({
+          version: 'v3',
+          auth: new google.auth.GoogleAuth({
+            keyFile: process.env.GOOGLE_APPLICATION_CREDENTIALS,
+            scopes: ['https://www.googleapis.com/auth/drive.metadata.readonly'],
+          })
+        });
+      }
       // TODO: this date is in UTC timezone. Use moment.js to handle datetime
       let date = new Date();
       const today_date = convertToOnlyDateInISO(date);
@@ -119,7 +129,7 @@ var self = module.exports = {
             .then((result) => {
               for (let i = 0; i < files.length; i++) {
                 let file = files[i];
-                let billsData = db.collection('bills').doc(file.id)
+                let billsData = db.collection('bills-test').doc(file.id)
                 billsData.set({file_name: file.name})
               }
               console.log('[INFO] %s files processed', files.length);
@@ -154,7 +164,7 @@ var self = module.exports = {
 
 async function fileAlreadyProcessed(file) {
   let alreadyProcessed = false
-  const querySnapshot = await db.collection('bills').get()
+  const querySnapshot = await db.collection('bills-test').get()
   querySnapshot.forEach((doc) => {
     if (doc.id == file.id) {
       console.log('[DEBUG %s => %s', doc.id, doc.data())

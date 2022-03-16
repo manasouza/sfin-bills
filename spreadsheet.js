@@ -9,9 +9,9 @@ const async = require('async');
 const _l = require('lodash')
 
 // service account created credentials
-// const credentials = process.env.credentials
+const credentials = require(process.env.credentials)
 const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
-const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
+const credentials2 = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
 
 
 // spreadsheet key is the long id in the sheets URL

@@ -11,16 +11,22 @@ const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
 const CRED_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const TOKEN_PATH = CRED_DIR + 'token.json';
 
+const credentials = process.env.credentials
+
 var web_server = http.createServer(function (request, response) {
-  // Load client secrets from a local file.
-  fs.readFile(CRED_DIR + 'client_secret.json', (err, content) => {
-    if (err) {
-      console.log('[ERROR] Error loading client secret file:', err);
-      process.exit(1);
-    }
-    // Authorize a client with credentials, then call the Google Sheets API.
-    authorize(JSON.parse(content), listSpecificModified);
-  });  
+  if (credentials) {
+    listSpecificModified(null)
+  } else {
+    // Load client secrets from a local file.
+    fs.readFile(CRED_DIR + 'client_secret.json', (err, content) => {
+      if (err) {
+        console.log('[ERROR] Error loading client secret file:', err);
+        process.exit(1);
+      }
+      // Authorize a client with credentials, then call the Google Sheets API.
+      authorize(JSON.parse(content), listSpecificModified);
+    });
+  }
   response.end()
 });
 web_server.listen(8321)
@@ -36,8 +42,8 @@ function authorize(credentials, callback) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   // const auth = new google.auth();
   const oAuth2Client = new google.auth.OAuth2(
-    client_id, 
-    client_secret, 
+    client_id,
+    client_secret,
     redirect_uris[0]
   );
 
