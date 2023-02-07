@@ -88,6 +88,9 @@ var self = module.exports = {
             categoryValueMap.set(cell._row, cell.value);
           }
         }
+        if (categoryValueMap.length < 1) {
+          console.log('[WARN] Nothing found for category mapping. Check if some category changed in spreadsheet')
+        }
       } catch (err) {
         console.log('[ERROR] %s', err)
       }
