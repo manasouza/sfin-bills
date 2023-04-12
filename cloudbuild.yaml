@@ -2,7 +2,7 @@ steps:
 - name: node:12.22.9
   entrypoint: npm
   args: ['install']
-- name: node:10.16.0
+- name: node:12.22.9
   volumes:
   - name: 'cred_vol'
     path: '/builder/home/.credentials'
@@ -11,7 +11,7 @@ steps:
     - '-c'
     - | 
         echo '{}' > /builder/home/.credentials/SmartFinance-Bills-Beta-eb6d6507173d.json
-- name: node:10.16.0
+- name: node:12.22.9
   entrypoint: npm
   args: ['test']
   volumes:
