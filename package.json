@@ -34,7 +34,7 @@
     "googleapis": "49.0.0",
     "hashmap": "2.4.0",
     "lodash": "4.17.21",
-    "moment": "2.25.0",
+    "moment": "2.29.4",
     "snyk": "^1.1140.0",
     "sprintf-js": "~1.0.3",
     "underscore": "1.10.0",
