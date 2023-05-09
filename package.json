@@ -37,7 +37,7 @@
     "moment": "2.25.0",
     "snyk": "^1.1140.0",
     "sprintf-js": "~1.0.3",
-    "underscore": "1.10.0",
+    "underscore": "1.12.1",
     "underscore.string": "3.3.6"
   },
   "devDependencies": {
