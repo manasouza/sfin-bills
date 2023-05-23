@@ -41,7 +41,7 @@
     "underscore.string": "3.3.6"
   },
   "devDependencies": {
-    "eslint": "^4.12.0",
+    "eslint": "^8.41.0",
     "mocha": "^10.2.0",
     "expect.js": "^0.3.1"
   },
