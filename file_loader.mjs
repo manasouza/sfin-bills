@@ -1,16 +1,16 @@
 /*jshint esversion: 6 */
 
-const {google} = require('googleapis');
+import { spreadsheet } from './spreadsheet.mjs'
 
-const fs = require('fs');
-const s = require("./node_modules/underscore.string");
-const Map = require("collections/map");
-const Dict = require("collections/dict");
-const List = require("collections/list");
-const Firestore = require('@google-cloud/firestore');
+import {google} from 'googleapis'
+import {s} from 'underscore.string'
+import {Map} from 'collections/map.js'
+import {Dict} from 'collections/dict.js'
+import {List} from 'collections/list.js'
+import {Firestore} from '@google-cloud/firestore'
+import {BluebirdPromise} from 'bluebird'
 
-const BluebirdPromise = require('bluebird');
-const spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
+const spreadsheetInteg = BluebirdPromise.promisifyAll(spreadsheet);
 
 const db = new Firestore({
   projectId: 'smartfinance-bills-beta',
@@ -115,7 +115,7 @@ var self = module.exports = {
               console.log('[WARN] category not found: %s', receiptName)
             }
           })
-          spreadsheet.updateSpreadsheetAsync(spreadsheetMap)
+          spreadsheetInteg.updateSpreadsheetAsync(spreadsheetMap)
             .then((result) => {
               for (let i = 0; i < files.length; i++) {
                 let file = files[i];

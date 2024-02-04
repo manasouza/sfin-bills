@@ -1,10 +1,11 @@
-const http = require('http');
-const fs = require('fs');
-const readline = require('readline');
-const googleAuth = require('google-auth-library');
-const { google } = require('googleapis');
+import { fileloader } from './file_loader.mjs'
 
-const listSpecificModified = require('./file_loader').listSpecificModified;
+import {http} from 'http'
+import {fs} from 'fs'
+import {readline} from 'readline'
+import { google } from 'googleapis'
+
+const listSpecificModified = fileloader.listSpecificModified;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];

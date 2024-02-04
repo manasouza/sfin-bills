@@ -1,21 +1,22 @@
 /*jshint esversion: 6 */
 
-const {GoogleSpreadsheet} = require("google-spreadsheet");
-const fs = require('fs');
-const m = require('moment');
-const _s = require("./node_modules/underscore.string");
-const _ = require('underscore');
-const async = require('async');
-const _l = require('lodash')
+// const JWT = require('google-auth-library')
+import { JWT } from 'google-auth-library'
+import {GoogleSpreadsheet} from 'google-spreadsheet'
+import {m} from 'moment'
+import {_s} from 'underscore.string'
+import {_} from 'underscore'
+import {_l} from 'lodash'
 
 // service account created credentials
 // const credentials = process.env.credentials
 const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
+const SCOPES = [
+  'https://www.googleapis.com/auth/spreadsheets',
+  'https://www.googleapis.com/auth/drive.file',
+];
 
-
-// spreadsheet key is the long id in the sheets URL
-const doc = new GoogleSpreadsheet(process.env.spreadsheet);
 // The column where category elements of spreadsheet are located
 const CATEGORY_COLUMN = process.env.category_column
 const MONTHS_ROW = process.env.months_row || 1
@@ -27,12 +28,17 @@ let billsSheet;
 var self = module.exports = {
 
   updateSpreadsheet : async function(dataMap, saveProcessedFiles) {
-    await doc.useServiceAccountAuth(credentials)
-    // const credentialsJson = JSON.parse(fs.readFileSync(credentials, 'utf8'))
-    // await doc.useServiceAccountAuth(credentialsJson)
+    // await doc.useServiceAccountAuth(credentials)
+    const jwt = new JWT({
+      email: credentials.client_email,
+      key: credentials.private_key,
+      scopes: SCOPES,
+    });
+    // spreadsheet key is the long id in the sheets URL
+    const doc = new GoogleSpreadsheet(process.env.spreadsheet, jwt);    
     await doc.loadInfo()
     const billsSheet = doc.sheetsByIndex[0]
-    console.log('[INFO] Loaded doc: %s on first sheet: %s', doc.title, billsSheet.title)
+    console.log('[INFO] Loaded doc: %s on first sheet: %s', doc.title(), billsSheet.title)
 
     await monthReference(MONTHS_ROW).then(result => {
       validateFoundMonthReference(result)
