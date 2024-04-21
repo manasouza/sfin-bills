@@ -8,15 +8,18 @@ const Map = require("collections/map");
 const Dict = require("collections/dict");
 const List = require("collections/list");
 const Firestore = require('@google-cloud/firestore');
+const {PubSub} = require('@google-cloud/pubsub')
 
 const BluebirdPromise = require('bluebird');
 const spreadsheet = BluebirdPromise.promisifyAll(require('./spreadsheet'));
+const projectId = 'smartfinance-bills-beta'
 
 const db = new Firestore({
-  projectId: 'smartfinance-bills-beta',
+  projectId: projectId,
   keyFilename: process.env.credentials,
 });
 const billsCategoryMap = db.collection('bills_config').doc('mapping')
+const pubSubClient = new PubSub(projectId)
 
 const FILENAME_DATA_SEPARATOR = "_"
 const FILENAME_FIELDS_LENGTH = 3
@@ -113,8 +116,14 @@ var self = module.exports = {
               }
             } else {
               console.log('[WARN] category not found: %s', receiptName)
+              publishMessage('sfinbills', receiptName).catch(err => {
+                console.error(err.message);
+                process.exitCode = 1;
+              })
+              return;
             }
           })
+          console.log("TODO: should stop here and not call spreadsheet")
           spreadsheet.updateSpreadsheetAsync(spreadsheetMap)
             .then((result) => {
               for (let i = 0; i < files.length; i++) {
@@ -151,6 +160,19 @@ var self = module.exports = {
       return s.trim(receipt_name);
     }
 };
+
+async function publishMessage(topic, data) {
+  const dataBuffer = Buffer.from(data)
+  try {
+    const messageId = await pubSubClient
+      .topic(topic)
+      .publishMessage({data: dataBuffer});
+    console.log(`[INFO] message ${messageId} published.`);
+  } catch (error) {
+    console.error(`Received error while publishing: ${error.message}`);
+    process.exitCode = 1;
+  }
+}
 
 async function fileAlreadyProcessed(file) {
   let alreadyProcessed = false
