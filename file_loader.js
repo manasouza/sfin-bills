@@ -120,22 +120,24 @@ var self = module.exports = {
                 console.error(err.message);
                 process.exitCode = 1;
               })
-              return;
             }
           })
-          console.log("TODO: should stop here and not call spreadsheet")
-          spreadsheet.updateSpreadsheetAsync(spreadsheetMap)
-            .then((result) => {
-              for (let i = 0; i < files.length; i++) {
-                let file = files[i];
-                let billsData = db.collection('bills').doc(file.id)
-                billsData.set({file_name: file.name})
-              }
-              console.log('[INFO] %s files processed', files.length);
-            })
-            .catch((err) => {
-              console.log("[ERROR] updateSpreadsheet - %s", err);
-            })
+          if (spreadsheetMap.siza === 0) {
+            console.log("[INFO] no new registries found to be categorized")
+          } else {
+            spreadsheet.updateSpreadsheetAsync(spreadsheetMap)
+              .then((result) => {
+                for (let i = 0; i < files.length; i++) {
+                  let file = files[i];
+                  let billsData = db.collection('bills').doc(file.id)
+                  billsData.set({file_name: file.name})
+                }
+                console.log('[INFO] %s files processed', files.length);
+              })
+              .catch((err) => {
+                console.log("[ERROR] updateSpreadsheet - %s", err);
+              })
+          }
         }
       }
     },
