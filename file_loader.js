@@ -1,3 +1,4 @@
+
 /*jshint esversion: 6 */
 
 const {google} = require('googleapis');
@@ -122,7 +123,7 @@ var self = module.exports = {
               })
             }
           })
-          if (spreadsheetMap.siza === 0) {
+          if (spreadsheetMap.size === 0) {
             console.log("[INFO] no new registries found to be categorized")
           } else {
             spreadsheet.updateSpreadsheetAsync(spreadsheetMap)
