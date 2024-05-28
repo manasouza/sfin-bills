@@ -121,6 +121,8 @@ var self = module.exports = {
                 console.error(err.message);
                 process.exitCode = 1;
               })
+              files = files.filter(file => !file.name.includes(receiptName) && !file.name.includes(value))
+              console.log('[DEBUG] content of files to be processed changed: %s', files)
             }
           })
           if (spreadsheetMap.size === 0) {
