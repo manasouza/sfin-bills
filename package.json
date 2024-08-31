@@ -31,7 +31,7 @@
     "async": "2.6.4",
     "bluebird": "3.7.2",
     "collections": "5.1.13",
-    "google-spreadsheet": "4.0.0",
+    "google-spreadsheet": "3.3.0",
     "googleapis": "49.0.0",
     "hashmap": "2.4.0",
     "lodash": "4.17.21",
