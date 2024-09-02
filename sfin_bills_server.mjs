@@ -1,27 +1,27 @@
-import { fileloader } from './file_loader.mjs'
+import { listSpecificModified } from './file_loader.mjs'
 
-import {http} from 'http'
-import {fs} from 'fs'
-import {readline} from 'readline'
+import {createServer} from 'http'
+import {readFile, writeFile} from 'fs'
+import {createInterface} from 'readline'
 import { google } from 'googleapis'
 
-const listSpecificModified = fileloader.listSpecificModified;
+// const listSpecificModified = fileloader.listSpecificModified;
 
 // If modifying these scopes, delete token.json.
 const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
 const CRED_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const TOKEN_PATH = CRED_DIR + 'token.json';
 
-var web_server = http.createServer(function (request, response) {
+var web_server = createServer(function (request, response) {
   // Load client secrets from a local file.
-  fs.readFile(CRED_DIR + 'client_secret.json', (err, content) => {
+  readFile(CRED_DIR + 'client_secret.json', (err, content) => {
     if (err) {
       console.log('[ERROR] Error loading client secret file:', err);
       process.exit(1);
     }
     // Authorize a client with credentials, then call the Google Sheets API.
     authorize(JSON.parse(content), listSpecificModified);
-  });  
+  });
   response.end()
 });
 web_server.listen(8321)
@@ -37,13 +37,13 @@ function authorize(credentials, callback) {
   const { client_secret, client_id, redirect_uris } = credentials.installed;
   // const auth = new google.auth();
   const oAuth2Client = new google.auth.OAuth2(
-    client_id, 
-    client_secret, 
+    client_id,
+    client_secret,
     redirect_uris[0]
   );
 
   // Check if we have previously stored a token.
-  fs.readFile(TOKEN_PATH, (err, token) => {
+  readFile(TOKEN_PATH, (err, token) => {
     if (err) return getNewToken(oAuth2Client, callback);
     oAuth2Client.setCredentials(JSON.parse(token));
     callback(oAuth2Client);
@@ -62,7 +62,7 @@ function getNewToken(oAuth2Client, callback) {
     scope: SCOPES
   });
   console.log('Authorize this app by visiting this url:', authUrl);
-  const rl = readline.createInterface({
+  const rl = createInterface({
     input: process.stdin,
     output: process.stdout
   });
@@ -75,7 +75,7 @@ function getNewToken(oAuth2Client, callback) {
       }
       oAuth2Client.setCredentials(token);
       // Store the token to disk for later program executions
-      fs.writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
+      writeFile(TOKEN_PATH, JSON.stringify(token), (err) => {
         if (err) console.error(err);
         console.log('[INFO] Token stored to', TOKEN_PATH);
       });
