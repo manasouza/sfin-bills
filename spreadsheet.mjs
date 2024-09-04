@@ -11,21 +11,21 @@ import {GoogleSpreadsheet} from 'google-spreadsheet'
 import pkg_u from 'underscore'
 // import { locale } from 'moment'
 import m from 'moment'
-import pkg_l from 'lodash'
+// import pkg_l from 'lodash'
 import pkg_us from 'underscore.string'
 const {_} = pkg_u
 const { locale } = m
-const {_l} = pkg_l
+// const {_l} = pkg_l
 const {_s} = pkg_us
+const { numberFormat, toString } = pkg_us
 // this declaration supports old require syntax for credentials var
 import { createRequire } from 'module';
-import { log } from 'console'
 const require = createRequire(import.meta.url);
-
 // service account created credentials
 // const credentials = process.env.credentials
 const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
+const _l = require('lodash')
 
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
@@ -40,7 +40,7 @@ const currency_factor = 100;
 let workingColumn;
 let billsSheet;
 
-export async function updateSpreadsheet(dataMap, saveProcessedFiles) {
+export async function updateSpreadsheet(dataMap) {
   // await doc.useServiceAccountAuth(credentials)
   const jwt = new JWT({
     email: credentials.client_email,
@@ -54,12 +54,12 @@ export async function updateSpreadsheet(dataMap, saveProcessedFiles) {
   console.log('[INFO] Loaded doc: %s on first sheet: %s', doc.title, billsSheet.title)
 
   await monthReference(MONTHS_ROW).then(result => {
+    console.log("RESULT: " + result)
     validateFoundMonthReference(result)
     workingColumn = result
   })
   await workingRows(CATEGORY_COLUMN, dataMap).then(async result => {
     await setCellValueForEachCategory(result.data_map, result.category_value_map, workingColumn)
-    saveProcessedFiles()
   })
 
   async function monthReference(monthRowNum) {
@@ -73,12 +73,11 @@ export async function updateSpreadsheet(dataMap, saveProcessedFiles) {
     try {
       // await billsSheet.loadCells({ startRowIndex: monthRowNum, startColumnIndex: 2})
       await billsSheet.loadCells({ startRowIndex: monthRowNum, startColumnIndex: 0})
-      console.log('[INFO] ' + monthRowNum)
       // it considers merged cells with null value
-      for (let i = 1; i <= billsSheet.columnCount; i++) {
+      for (let i = 1; i < billsSheet.columnCount; i++) {
         const cell = billsSheet.getCell(monthRowNum, i)
         if (cell.value != null && current_month.toLowerCase() === cell.value.toLowerCase()) {
-          return cell._column
+          return cell.columnIndex
         }
       }
     } catch (err) {
@@ -105,7 +104,7 @@ export async function updateSpreadsheet(dataMap, saveProcessedFiles) {
       for (let row = 1; row < billsSheet.rowCount; row++) {
         const cell = billsSheet.getCell(row, categoryColumn-1)
         if (dataMap.has(cell.value)) {
-          categoryValueMap.set(cell._row, cell.value);
+          categoryValueMap.set(cell.rowIndex, cell.value);
         }
       }
       if (categoryValueMap.length < 1) {
@@ -122,23 +121,28 @@ export async function updateSpreadsheet(dataMap, saveProcessedFiles) {
     if (categoryValueMap.length < 1) {
       console.warn("[WARN] category values not mapped. Stucked here");
     }
+    console.log(categoryValueMap.toObject())
     _l.map(categoryValueMap.toObject(), function(billingName, row) {
       workingRow = row
       const workingCell = billsSheet.getCell(workingRow, workingColumn)
       let formulaToUpdate = workingCell.formula
       let cellValue = workingCell.value
-      console.log('[DEBUG] cell row: %s / value: %s', workingCell._row, billingName);
+      console.log('[DEBUG] cell row: %s / value: %s', workingCell.rowIndex, billingName);
       console.log('[DEBUG] previous cell value: %s', cellValue)
       _l.forEach(dataMap.get(billingName).toArray(), async function (valueToUpdate) {
-        currencyValue = self.convertToCurrency(valueToUpdate)
-        if (_.isNull(cellValue) || _.isEmpty(_s.toString(cellValue))) {
+        let currencyValue = convertToCurrency(valueToUpdate)
+        if (_.isNull(cellValue) || _.isEmpty(toString(cellValue))) {
           formulaToUpdate = `=${currencyValue}`;
           cellValue = `=${currencyValue}`
         } else {
           formulaToUpdate = `${formulaToUpdate}+${currencyValue}`;
         }
       })
-      workingCell.formula = formulaToUpdate
+      if (formulaToUpdate === null) {
+        workingCell.value = null
+      } else {
+        workingCell.formula = formulaToUpdate
+      }
     })
     await billsSheet.saveUpdatedCells()
     console.log('[DEBUG] current cell value: %s', billsSheet.getCell(workingRow, workingColumn).value)
@@ -147,7 +151,7 @@ export async function updateSpreadsheet(dataMap, saveProcessedFiles) {
 
 export function convertToCurrency(value) {
   // TODO: receive format options by config file
-  return _s.numberFormat((value/currency_factor),2,',','');
+  return numberFormat((value/currency_factor),2,',','');
 }
 
 export function isAtCurrentMonth(current_month, last_updated_month) {
