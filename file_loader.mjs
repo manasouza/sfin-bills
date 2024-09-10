@@ -28,7 +28,7 @@ const db = new Firestore({
   projectId: 'smartfinance-bills-beta',
   keyFilename: process.env.credentials,
 });
-const billsCategoryMap = db.collection('bills_config').doc('mapping')
+const billsCategoryMap = db.collection('bills_config').doc(process.env.database_cfg)
 
 const FILENAME_DATA_SEPARATOR = "_"
 const FILENAME_FIELDS_LENGTH = 3
@@ -130,7 +130,7 @@ export async function processFiles(files) {
         .then((result) => {
           for (let i = 0; i < files.length; i++) {
             let file = files[i];
-            let billsData = db.collection('bills').doc(file.id)
+            let billsData = db.collection(process.env.database).doc(file.id)
             billsData.set({file_name: file.name})
           }
           console.log('[INFO] %s files processed', files.length);

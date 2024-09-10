@@ -16,8 +16,8 @@ import pkg_us from 'underscore.string'
 const {_} = pkg_u
 const { locale } = m
 // const {_l} = pkg_l
-const {_s} = pkg_us
-const { numberFormat, toString } = pkg_us
+// const {_s} = pkg_us
+// const { numberFormat, toString } = pkg_us
 // this declaration supports old require syntax for credentials var
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
@@ -26,6 +26,7 @@ const require = createRequire(import.meta.url);
 const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
 const _l = require('lodash')
+const _s = require('underscore.string')
 
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
@@ -131,7 +132,7 @@ export async function updateSpreadsheet(dataMap) {
       console.log('[DEBUG] previous cell value: %s', cellValue)
       _l.forEach(dataMap.get(billingName).toArray(), async function (valueToUpdate) {
         let currencyValue = convertToCurrency(valueToUpdate)
-        if (_.isNull(cellValue) || _.isEmpty(toString(cellValue))) {
+        if (_.isNull(cellValue) || _.isEmpty(_s.toString(cellValue))) {
           formulaToUpdate = `=${currencyValue}`;
           cellValue = `=${currencyValue}`
         } else {
@@ -151,7 +152,7 @@ export async function updateSpreadsheet(dataMap) {
 
 export function convertToCurrency(value) {
   // TODO: receive format options by config file
-  return numberFormat((value/currency_factor),2,',','');
+  return _s.numberFormat((value/currency_factor),2,',','');
 }
 
 export function isAtCurrentMonth(current_month, last_updated_month) {
