@@ -12,8 +12,8 @@ import pkg_dict from 'collections/dict.js'
 import pkg_list from 'collections/list.js'
 import {Firestore} from '@google-cloud/firestore'
 // import {BluebirdPromise} from 'bluebird'
-import pkg_bbp from 'bluebird';
-import pkg_map from 'collections/map.js';
+import pkg_bbp from 'bluebird'
+import pkg_map from 'collections/map.js'
 
 const {Map} = pkg_map
 const {Dict} = pkg_dict
@@ -27,8 +27,8 @@ const {strRightBack, strLeftBack, trim} = pkg_us
 const db = new Firestore({
   projectId: 'smartfinance-bills-beta',
   keyFilename: process.env.credentials,
-});
-const billsCategoryMap = db.collection('bills_config').doc(process.env.database_cfg)
+})
+const billsCategoryMap = db.collection('bills_config').doc(process.env.database_cfg ? process.env.database_cfg : 'bills_test')
 
 const FILENAME_DATA_SEPARATOR = "_"
 const FILENAME_FIELDS_LENGTH = 3
