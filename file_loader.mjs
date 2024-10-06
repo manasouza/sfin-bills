@@ -1,17 +1,11 @@
 /*jshint esversion: 6 */
 
-// import { spreadsheet } from './spreadsheet.mjs'
 import { updateSpreadsheet } from './spreadsheet.mjs';
-
 import {google} from 'googleapis'
-// import {s} from 'underscore.string'
 import pkg_us from 'underscore.string'
-// import {strRightBack, strLeftBack, trim} from 'underscore.string'
-// import {Map} from 'collections/map.js'
 import pkg_dict from 'collections/dict.js'
 import pkg_list from 'collections/list.js'
 import {Firestore} from '@google-cloud/firestore'
-// import {BluebirdPromise} from 'bluebird'
 import pkg_bbp from 'bluebird'
 import pkg_map from 'collections/map.js'
 
@@ -19,16 +13,13 @@ const {Map} = pkg_map
 const {Dict} = pkg_dict
 const {List} = pkg_list
 const {BluebirdPromise} = pkg_bbp
-// const {s} = pkg_us
 const {strRightBack, strLeftBack, trim} = pkg_us
-
-// const spreadsheetInteg = BluebirdPromise.promisifyAll(spreadsheet);
 
 const db = new Firestore({
   projectId: 'smartfinance-bills-beta',
   keyFilename: process.env.credentials,
 })
-const billsCategoryMap = db.collection('bills_config').doc(process.env.database_cfg ? process.env.database_cfg : 'bills_test')
+const billsCategoryMap = db.collection('bills_config').doc(process.env.database_cfg ? process.env.database_cfg : 'bills_mapping_test')
 
 const FILENAME_DATA_SEPARATOR = "_"
 const FILENAME_FIELDS_LENGTH = 3

@@ -1,28 +1,14 @@
 /*jshint esversion: 6 */
 
-// const JWT = require('google-auth-library')
 import { JWT } from 'google-auth-library'
 import {GoogleSpreadsheet} from 'google-spreadsheet'
-// import {m} from 'moment'
-// import {_s} from 'underscore.string'
-// import {_} from 'underscore'
-// import {_l} from 'lodash'
-
 import pkg_u from 'underscore'
-// import { locale } from 'moment'
 import m from 'moment'
-// import pkg_l from 'lodash'
-import pkg_us from 'underscore.string'
 const {_} = pkg_u
 const { locale } = m
-// const {_l} = pkg_l
-// const {_s} = pkg_us
-// const { numberFormat, toString } = pkg_us
 // this declaration supports old require syntax for credentials var
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-// service account created credentials
-// const credentials = process.env.credentials
 const TOKEN_DIR = (process.env.HOME || process.env.HOMEPATH || process.env.USERPROFILE) + '/.credentials/'
 const credentials = require(TOKEN_DIR + 'SmartFinance-Bills-Beta-eb6d6507173d.json');
 const _l = require('lodash')
@@ -30,7 +16,6 @@ const _s = require('underscore.string')
 
 const SCOPES = [
   'https://www.googleapis.com/auth/spreadsheets',
-  // 'https://www.googleapis.com/auth/drive.file',
 ];
 
 // The column where category elements of spreadsheet are located
@@ -42,7 +27,6 @@ let workingColumn;
 let billsSheet;
 
 export async function updateSpreadsheet(dataMap) {
-  // await doc.useServiceAccountAuth(credentials)
   const jwt = new JWT({
     email: credentials.client_email,
     key: credentials.private_key,
@@ -55,7 +39,6 @@ export async function updateSpreadsheet(dataMap) {
   console.log('[INFO] Loaded doc: %s on first sheet: %s', doc.title, billsSheet.title)
 
   await monthReference(MONTHS_ROW).then(result => {
-    console.log("RESULT: " + result)
     validateFoundMonthReference(result)
     workingColumn = result
   })
