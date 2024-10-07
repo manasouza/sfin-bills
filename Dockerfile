@@ -6,4 +6,4 @@ COPY . /app
 
 RUN npm install
 
-CMD node sfin_bills_server.js
+CMD node sfin_bills_server.mjs
