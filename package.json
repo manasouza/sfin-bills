@@ -1,6 +1,6 @@
 {
   "name": "sfin-bills",
-  "version": "0.8.4",
+  "version": "0.9.0",
   "description": "interprets some file name at Google Drive and add this value to some Google Spreadsheet",
   "main": "sfin_bills_server.mjs",
   "scripts": {
@@ -27,7 +27,7 @@
     "node": "14.21.3"
   },
   "dependencies": {
-    "@google-cloud/pubsub": "3.7.3",
+    "@google-cloud/pubsub": "4.7.2",
     "@google-cloud/firestore": "7.0.0",
     "async": "2.6.4",
     "bluebird": "3.7.2",
