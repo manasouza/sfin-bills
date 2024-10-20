@@ -19,7 +19,7 @@ const db = new Firestore({
   projectId: projectId,
   keyFilename: process.env.credentials,
 })
-const billsCategoryMap = db.collection('bills_config').doc(process.env.database_cfg ? process.env.database_cfg : 'bills_mapping_test')
+const billsCategoryMap = db.collection('bills_config').doc(process.env.document_cfg ? process.env.document_cfg : 'bills_mapping_test')
 const pubSubClient = new PubSub(projectId)
 
 const FILENAME_DATA_SEPARATOR = "_"
@@ -100,7 +100,7 @@ export async function processFiles(files) {
     const mappingDoc = await billsCategoryMap.get()
     const spreadsheetMap = new Map()
     if (!mappingDoc.exists) {
-      console.log('[ERROR] no mapping category found for bills')
+      console.log('[ERROR] no mapping category found for bills. Check database configuration.')
       return;
     } else {
       bills_map.forEach(function(value, receiptName) {
@@ -131,7 +131,7 @@ export async function processFiles(files) {
           .then((result) => {
             for (let i = 0; i < files.length; i++) {
               let file = files[i];
-              let billsData = db.collection(process.env.database).doc(file.id)
+              let billsData = db.collection(process.env.collection).doc(file.id)
               billsData.set({file_name: file.name})
             }
             console.log('[INFO] %s files processed', files.length);
