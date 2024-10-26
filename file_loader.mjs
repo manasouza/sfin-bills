@@ -2,24 +2,25 @@
 
 import { updateSpreadsheet } from './spreadsheet.mjs';
 import {google} from 'googleapis'
+import {PubSub} from '@google-cloud/pubsub'
 import pkg_us from 'underscore.string'
 import pkg_dict from 'collections/dict.js'
 import pkg_list from 'collections/list.js'
 import {Firestore} from '@google-cloud/firestore'
-import pkg_bbp from 'bluebird'
 import pkg_map from 'collections/map.js'
 
 const {Map} = pkg_map
 const {Dict} = pkg_dict
 const {List} = pkg_list
-const {BluebirdPromise} = pkg_bbp
 const {strRightBack, strLeftBack, trim} = pkg_us
+const projectId = 'smartfinance-bills-beta'
 
 const db = new Firestore({
-  projectId: 'smartfinance-bills-beta',
+  projectId: projectId,
   keyFilename: process.env.credentials,
 })
-const billsCategoryMap = db.collection('bills_config').doc(process.env.database_cfg ? process.env.database_cfg : 'bills_mapping_test')
+const billsCategoryMap = db.collection('bills_config').doc(process.env.document_cfg ? process.env.document_cfg : 'bills_mapping_test')
+const pubSubClient = new PubSub(projectId)
 
 const FILENAME_DATA_SEPARATOR = "_"
 const FILENAME_FIELDS_LENGTH = 3
@@ -99,7 +100,7 @@ export async function processFiles(files) {
     const mappingDoc = await billsCategoryMap.get()
     const spreadsheetMap = new Map()
     if (!mappingDoc.exists) {
-      console.log('[ERROR] no mapping category found for bills')
+      console.log('[ERROR] no mapping category found for bills. Check database configuration.')
       return;
     } else {
       bills_map.forEach(function(value, receiptName) {
@@ -115,20 +116,30 @@ export async function processFiles(files) {
           }
         } else {
           console.log('[WARN] category not found: %s', receiptName)
+          publishMessage('sfinbills', receiptName).catch(err => {
+            console.error(err.message);
+            process.exitCode = 1;
+          })
+          files = files.filter(file => !file.name.includes(receiptName) && !file.name.includes(value))
+          console.log('[DEBUG] content of files to be processed changed: %s', files)
         }
       })
-      updateSpreadsheet(spreadsheetMap)
-        .then((result) => {
-          for (let i = 0; i < files.length; i++) {
-            let file = files[i];
-            let billsData = db.collection(process.env.database).doc(file.id)
-            billsData.set({file_name: file.name})
-          }
-          console.log('[INFO] %s files processed', files.length);
-        })
-        .catch((err) => {
-          console.log("[ERROR] updateSpreadsheet - %s", err);
-        })
+      if (spreadsheetMap.size === 0) {
+        console.log("[INFO] no new registries found to be categorized")
+      } else {
+        updateSpreadsheet(spreadsheetMap)
+          .then((result) => {
+            for (let i = 0; i < files.length; i++) {
+              let file = files[i];
+              let billsData = db.collection(process.env.collection).doc(file.id)
+              billsData.set({file_name: file.name})
+            }
+            console.log('[INFO] %s files processed', files.length);
+          })
+          .catch((err) => {
+            console.log("[ERROR] updateSpreadsheet - %s", err);
+          })
+      }
     }
   }
 }
@@ -163,6 +174,19 @@ async function fileAlreadyProcessed(file) {
     }
   })
   return alreadyProcessed
+}
+
+async function publishMessage(topic, data) {
+  const dataBuffer = Buffer.from(data)
+  try {
+    const messageId = await pubSubClient
+      .topic(topic)
+      .publishMessage({data: dataBuffer});
+    console.log(`[INFO] message ${messageId} published.`);
+  } catch (error) {
+    console.error(`Received error while publishing: ${error.message}`);
+    process.exitCode = 1;
+  }
 }
 
 function convertToOnlyDateInISO(date) {

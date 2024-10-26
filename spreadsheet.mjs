@@ -24,7 +24,6 @@ const MONTHS_ROW = process.env.months_row || 1
 
 const currency_factor = 100;
 let workingColumn;
-let billsSheet;
 
 export async function updateSpreadsheet(dataMap) {
   const jwt = new JWT({
