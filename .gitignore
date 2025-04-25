@@ -40,3 +40,9 @@ jspm_packages
 .vscode/
 .idea/
 __pycache__
+
+# Terraform
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+.terraform.lock*
