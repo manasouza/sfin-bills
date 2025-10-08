@@ -21,6 +21,7 @@ const SCOPES = [
 // The column where category elements of spreadsheet are located
 const CATEGORY_COLUMN = process.env.category_column
 const MONTHS_ROW = process.env.months_row || 1
+const COLUMN_OFFSET = 3
 
 const currency_factor = 100;
 let workingColumn;
@@ -60,7 +61,7 @@ export async function updateSpreadsheet(dataMap) {
       for (let i = 1; i < billsSheet.columnCount; i++) {
         const cell = billsSheet.getCell(monthRowNum, i)
         if (cell.value != null && current_month.toLowerCase() === cell.value.toLowerCase()) {
-          return cell.columnIndex
+          return cell.columnIndex+COLUMN_OFFSET
         }
       }
     } catch (err) {
