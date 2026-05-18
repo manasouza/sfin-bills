@@ -2,6 +2,7 @@
 
 import { JWT } from 'google-auth-library'
 import {GoogleSpreadsheet} from 'google-spreadsheet'
+import {Firestore} from '@google-cloud/firestore'
 import pkg_u from 'underscore'
 import m from 'moment'
 const {_} = pkg_u
@@ -21,7 +22,14 @@ const SCOPES = [
 // The column where category elements of spreadsheet are located
 const CATEGORY_COLUMN = process.env.category_column
 const MONTHS_ROW = process.env.months_row || 1
-const COLUMN_OFFSET = 3
+const DEFAULT_COLUMN_OFFSET = 4
+const SETTINGS_DOCUMENT = process.env.settings_document_cfg || 'settings'
+const projectId = 'smartfinance-bills-beta'
+const db = new Firestore({
+  projectId: projectId,
+  keyFilename: process.env.credentials,
+})
+const spreadsheetSettings = db.collection('bills_config').doc(SETTINGS_DOCUMENT)
 
 const currency_factor = 100;
 let workingColumn;
@@ -32,6 +40,7 @@ export async function updateSpreadsheet(dataMap) {
     key: credentials.private_key,
     scopes: SCOPES,
   });
+  const spreadsheetConfig = await getSpreadsheetConfig()
   // spreadsheet key is the long id in the sheets URL
   const doc = new GoogleSpreadsheet(process.env.spreadsheet, jwt);
   await doc.loadInfo()
@@ -61,7 +70,7 @@ export async function updateSpreadsheet(dataMap) {
       for (let i = 1; i < billsSheet.columnCount; i++) {
         const cell = billsSheet.getCell(monthRowNum, i)
         if (cell.value != null && current_month.toLowerCase() === cell.value.toLowerCase()) {
-          return cell.columnIndex+COLUMN_OFFSET
+          return cell.columnIndex + spreadsheetConfig.columnOffset
         }
       }
     } catch (err) {
@@ -130,6 +139,27 @@ export async function updateSpreadsheet(dataMap) {
     })
     await billsSheet.saveUpdatedCells()
     console.log('[DEBUG] current cell value: %s', billsSheet.getCell(workingRow, workingColumn).value)
+  }
+}
+
+export async function getSpreadsheetConfig() {
+  try {
+    const settingsDoc = await spreadsheetSettings.get()
+    if (!settingsDoc.exists) {
+      console.log('[WARN] spreadsheet settings not found. Using default column offset: %s', DEFAULT_COLUMN_OFFSET)
+      return { columnOffset: DEFAULT_COLUMN_OFFSET }
+    }
+
+    const columnOffset = Number.parseInt(settingsDoc.get('columnOffset'), 10)
+    if (Number.isNaN(columnOffset)) {
+      console.log('[WARN] invalid column offset setting. Using default column offset: %s', DEFAULT_COLUMN_OFFSET)
+      return { columnOffset: DEFAULT_COLUMN_OFFSET }
+    }
+
+    return { columnOffset }
+  } catch (err) {
+    console.log('[WARN] could not load spreadsheet settings: %s. Using default column offset: %s', err, DEFAULT_COLUMN_OFFSET)
+    return { columnOffset: DEFAULT_COLUMN_OFFSET }
   }
 }
 
