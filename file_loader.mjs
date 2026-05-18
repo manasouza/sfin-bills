@@ -20,6 +20,7 @@ const db = new Firestore({
   keyFilename: process.env.credentials,
 })
 const billsCategoryMap = db.collection('bills_config').doc(process.env.document_cfg ? process.env.document_cfg : 'bills_mapping_test')
+const billsSourcesMap = db.collection('bills_config').doc('payments')
 const pubSubClient = new PubSub(projectId)
 
 const FILENAME_DATA_SEPARATOR = "_"
@@ -41,9 +42,9 @@ export function listSpecificModified(auth) {
   const today_date = convertToOnlyDateInISO(date);
   const first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
   const first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
-  const file_id = 'Comprovante';
-  // const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'2021-09-01\' and modifiedTime < \'2021-10-01\'`;
-  const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'${first_day_of_month_date}\' and modifiedTime < \'${first_day_of_next_month_date}\'`;
+  const fileTypes = ['comprovante', 'pix', 'fatura']; // Add other possibilities
+  const nameFilter = fileTypes.map(type => `name contains '${type}'`).join(' or ');
+  const query_filter = `(${nameFilter}) and modifiedTime >= '${first_day_of_month_date}' and modifiedTime < '${first_day_of_next_month_date}'`;
 
   console.log(`[INFO] Today is ${today_date}`);
   getFilesByFilter(query_filter, service);
@@ -71,6 +72,7 @@ export async function processFiles(files) {
   } else {
     // #1 Verify unprocessed files got from GDrive and set then to Map
     let bills_map = new Dict();
+    let bills_source = new Dict();
     console.log('Files:');
     for (let i = 0; i < files.length; i++) {
       let file = files[i];
@@ -83,6 +85,8 @@ export async function processFiles(files) {
       if (!await fileAlreadyProcessed(file)) {
         const billingValue = getBillingValue(fileName);
         const receiptName = getReceiptName(fileName);
+        const billingSource = getBillingSource(fileName);
+        bills_source.set(receiptName, billingSource);      
         if (bills_map.has(receiptName)) {
           bills_map.set(receiptName+FILENAME_DATA_SEPARATOR+i, billingValue);
         } else {
@@ -98,6 +102,7 @@ export async function processFiles(files) {
     }
     // #2 Based on Map previously set, do the mapping with the base bills mapping config
     const mappingDoc = await billsCategoryMap.get()
+    const sourcesDoc =  await billsSourcesMap.get()
     const spreadsheetMap = new Map()
     if (!mappingDoc.exists) {
       console.log('[ERROR] no mapping category found for bills. Check database configuration.')
@@ -107,6 +112,7 @@ export async function processFiles(files) {
         // verifies the key on bills_data_map that fits to receipt name
         console.log('[DEBUG] get config value from key: %s', receiptName)
         let categoryValue = mappingDoc.get(receiptName.toLowerCase().split(FILENAME_DATA_SEPARATOR)[0])
+        let sourcesValue = sourcesDoc.get(receiptName.toLowerCase().split(FILENAME_DATA_SEPARATOR)[0])
         if (categoryValue) {
           console.log('[INFO] Mapping: %s -> %s:%s', categoryValue, receiptName, value)
           if (spreadsheetMap.has(categoryValue)) {
@@ -142,6 +148,13 @@ export async function processFiles(files) {
       }
     }
   }
+}
+
+export function getBillingSource(file_title) {
+  let first_limiter_occur = 0;
+  let last_limiter_occur = file_title.indexOf("_");
+  const source_name = file_title.substring(first_limiter_occur, last_limiter_occur);
+  return trim(source_name);
 }
 
 export function getBillingValue(file_title) {
