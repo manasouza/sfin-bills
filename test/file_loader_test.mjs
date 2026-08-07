@@ -2,7 +2,7 @@ import pkg_expect from 'expect.js'
 const expect = pkg_expect
 import pkg_assert from 'assert'
 const assert = pkg_assert
-import { processFiles, getBillingValue, getReceiptName } from '../file_loader.mjs'
+import { processFiles, getBillingSource, getBillingValue, getReceiptName } from '../file_loader.mjs'
 
 describe('FileLoader', function() {
   before(() => {
@@ -54,7 +54,7 @@ describe('FileLoader', function() {
       expect(billing_value).to.be(expected_billing_value)
     });
   });
-  describe('Get billing value', function() {
+  describe('Get receipt name', function() {
     it('should get receipt name from file name', function() {
       // GIVEN
       const billing_identifier = 'comprovante'
@@ -76,6 +76,32 @@ describe('FileLoader', function() {
       // THEN
       expect(receipt_name).to.be.ok()
       expect(receipt_name).to.be(expected_receipt_name)
+    });
+  });
+  describe('Get billing source', function() {
+    it('should get pix source from file name', function() {
+      // GIVEN
+      const file_title = 'pix_mercado_1000.pdf'
+      // WHEN
+      let billing_source = getBillingSource(file_title)
+      // THEN
+      expect(billing_source).to.be('pix')
+    });
+    it('should get comprovante source from file name', function() {
+      // GIVEN
+      const file_title = 'comprovante_condominio_50000.pdf'
+      // WHEN
+      let billing_source = getBillingSource(file_title)
+      // THEN
+      expect(billing_source).to.be('comprovante')
+    });
+    it('should normalize source to lowercase', function() {
+      // GIVEN
+      const file_title = 'Pix_mercado_1000.pdf'
+      // WHEN
+      let billing_source = getBillingSource(file_title)
+      // THEN
+      expect(billing_source).to.be('pix')
     });
   });
 });

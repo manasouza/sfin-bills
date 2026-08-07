@@ -41,9 +41,9 @@ export function listSpecificModified(auth) {
   const today_date = convertToOnlyDateInISO(date);
   const first_day_of_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth(), 1));
   const first_day_of_next_month_date = convertToOnlyDateInISO(new Date(date.getFullYear(), date.getMonth() + 1, 1));
-  const file_id = 'Comprovante';
-  // const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'2021-09-01\' and modifiedTime < \'2021-10-01\'`;
-  const query_filter = `name contains \'${file_id}\' and modifiedTime >= \'${first_day_of_month_date}\' and modifiedTime < \'${first_day_of_next_month_date}\'`;
+  const fileTypes = ['comprovante', 'pix', 'fatura']; // Add other possibilities
+  const nameFilter = fileTypes.map(type => `name contains '${type}'`).join(' or ');
+  const query_filter = `(${nameFilter}) and modifiedTime >= '${first_day_of_month_date}' and modifiedTime < '${first_day_of_next_month_date}'`;
 
   console.log(`[INFO] Today is ${today_date}`);
   getFilesByFilter(query_filter, service);
@@ -83,10 +83,12 @@ export async function processFiles(files) {
       if (!await fileAlreadyProcessed(file)) {
         const billingValue = getBillingValue(fileName);
         const receiptName = getReceiptName(fileName);
+        const billingSource = getBillingSource(fileName);
+        const billingEntry = { value: billingValue, source: billingSource }
         if (bills_map.has(receiptName)) {
-          bills_map.set(receiptName+FILENAME_DATA_SEPARATOR+i, billingValue);
+          bills_map.set(receiptName+FILENAME_DATA_SEPARATOR+i, billingEntry);
         } else {
-          bills_map.set(receiptName, billingValue);
+          bills_map.set(receiptName, billingEntry);
         }
       } else {
         console.log('[DEBUG] file already processed: %s', fileName);
@@ -108,7 +110,7 @@ export async function processFiles(files) {
         console.log('[DEBUG] get config value from key: %s', receiptName)
         let categoryValue = mappingDoc.get(receiptName.toLowerCase().split(FILENAME_DATA_SEPARATOR)[0])
         if (categoryValue) {
-          console.log('[INFO] Mapping: %s -> %s:%s', categoryValue, receiptName, value)
+          console.log('[INFO] Mapping: %s -> %s:%s (%s)', categoryValue, receiptName, value.value, value.source)
           if (spreadsheetMap.has(categoryValue)) {
             spreadsheetMap.get(categoryValue).push(value)
           } else {
@@ -120,7 +122,7 @@ export async function processFiles(files) {
             console.error(err.message);
             process.exitCode = 1;
           })
-          files = files.filter(file => !file.name.includes(receiptName) && !file.name.includes(value))
+          files = files.filter(file => !file.name.includes(receiptName) && !file.name.includes(value.value))
           console.log('[DEBUG] content of files to be processed changed: %s', files)
         }
       })
@@ -142,6 +144,13 @@ export async function processFiles(files) {
       }
     }
   }
+}
+
+export function getBillingSource(file_title) {
+  let first_limiter_occur = 0;
+  let last_limiter_occur = file_title.indexOf("_");
+  const source_name = file_title.substring(first_limiter_occur, last_limiter_occur);
+  return trim(source_name).toLowerCase();
 }
 
 export function getBillingValue(file_title) {
@@ -166,7 +175,7 @@ export function getReceiptName(file_title) {
 
 async function fileAlreadyProcessed(file) {
   let alreadyProcessed = false
-  const querySnapshot = await db.collection('bills').get()
+  const querySnapshot = await db.collection(process.env.collection).get()
   querySnapshot.forEach((doc) => {
     if (doc.id == file.id) {
       console.log('[DEBUG %s => %s', doc.id, doc.data())

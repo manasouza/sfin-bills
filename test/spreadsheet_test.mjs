@@ -1,7 +1,7 @@
 import pkg_expect from 'expect.js'
 const expect = pkg_expect
 import m from 'moment'
-import { convertToCurrency, isAtCurrentMonth } from '../spreadsheet.mjs'
+import { convertToCurrency, isAtCurrentMonth, normalizeColumnOffsets, resolveColumnOffset } from '../spreadsheet.mjs'
 
 describe('Spreadsheet Test', function() {
   describe('Expect currency values converted', function() {
@@ -60,6 +60,40 @@ describe('Spreadsheet Test', function() {
       const result = isAtCurrentMonth(current_month, sheet_column_month)
       // THEN
       expect(result).to.be(false)
+    });
+  });
+  describe('Resolve column offsets', function() {
+    it('should return pix column offset', function() {
+      // GIVEN
+      const source = 'pix'
+      // WHEN
+      const result = resolveColumnOffset(source)
+      // THEN
+      expect(result).to.be(4)
+    });
+    it('should return comprovante column offset', function() {
+      // GIVEN
+      const source = 'comprovante'
+      // WHEN
+      const result = resolveColumnOffset(source)
+      // THEN
+      expect(result).to.be(0)
+    });
+    it('should return undefined for unknown source', function() {
+      // GIVEN
+      const source = 'fatura'
+      // WHEN
+      const result = resolveColumnOffset(source)
+      // THEN
+      expect(result).to.be(undefined)
+    });
+    it('should normalize custom column offsets', function() {
+      // GIVEN
+      const columnOffsets = { Pix: '4', comprovante: '0', invalid: 'abc' }
+      // WHEN
+      const result = normalizeColumnOffsets(columnOffsets)
+      // THEN
+      expect(result).to.eql({ pix: 4, comprovante: 0 })
     });
   });
 });

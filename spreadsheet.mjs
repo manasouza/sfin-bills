@@ -22,7 +22,10 @@ const SCOPES = [
 // The column where category elements of spreadsheet are located
 const CATEGORY_COLUMN = process.env.category_column
 const MONTHS_ROW = process.env.months_row || 1
-const DEFAULT_COLUMN_OFFSET = 4
+const DEFAULT_COLUMN_OFFSETS = {
+  pix: 4,
+  comprovante: 0,
+}
 const SETTINGS_DOCUMENT = process.env.settings_document_cfg || 'settings'
 const projectId = 'smartfinance-bills-beta'
 const db = new Firestore({
@@ -70,7 +73,7 @@ export async function updateSpreadsheet(dataMap) {
       for (let i = 1; i < billsSheet.columnCount; i++) {
         const cell = billsSheet.getCell(monthRowNum, i)
         if (cell.value != null && current_month.toLowerCase() === cell.value.toLowerCase()) {
-          return cell.columnIndex + spreadsheetConfig.columnOffset
+          return cell.columnIndex
         }
       }
     } catch (err) {
@@ -117,28 +120,36 @@ export async function updateSpreadsheet(dataMap) {
     console.log(categoryValueMap.toObject())
     _l.map(categoryValueMap.toObject(), function(billingName, row) {
       workingRow = row
-      const workingCell = billsSheet.getCell(workingRow, workingColumn)
-      let formulaToUpdate = workingCell.formula
-      let cellValue = workingCell.value
-      console.log('[DEBUG] cell row: %s / value: %s', workingCell.rowIndex, billingName);
-      console.log('[DEBUG] previous cell value: %s', cellValue)
-      _l.forEach(dataMap.get(billingName).toArray(), async function (valueToUpdate) {
-        let currencyValue = convertToCurrency(valueToUpdate)
+      console.log('[DEBUG] cell row: %s / value: %s', workingRow, billingName);
+      _l.forEach(dataMap.get(billingName).toArray(), function (entryToUpdate) {
+        const columnOffset = resolveColumnOffset(entryToUpdate.source, spreadsheetConfig.columnOffsets)
+        if (columnOffset === undefined) {
+          console.log('[WARN] column offset not configured for source: %s. Skipping value: %s', entryToUpdate.source, entryToUpdate.value)
+          return
+        }
+
+        const targetColumn = workingColumn + columnOffset
+        const workingCell = billsSheet.getCell(workingRow, targetColumn)
+        let formulaToUpdate = workingCell.formula
+        let cellValue = workingCell.value
+        console.log('[DEBUG] source: %s / column offset: %s / target column: %s', entryToUpdate.source, columnOffset, targetColumn)
+        console.log('[DEBUG] previous cell value: %s', cellValue)
+        let currencyValue = convertToCurrency(entryToUpdate.value)
         if (_.isNull(cellValue) || _.isEmpty(_s.toString(cellValue))) {
           formulaToUpdate = `=${currencyValue}`;
           cellValue = `=${currencyValue}`
         } else {
           formulaToUpdate = `${formulaToUpdate}+${currencyValue}`;
         }
+
+        if (formulaToUpdate === null) {
+          workingCell.value = null
+        } else {
+          workingCell.formula = formulaToUpdate
+        }
       })
-      if (formulaToUpdate === null) {
-        workingCell.value = null
-      } else {
-        workingCell.formula = formulaToUpdate
-      }
     })
     await billsSheet.saveUpdatedCells()
-    console.log('[DEBUG] current cell value: %s', billsSheet.getCell(workingRow, workingColumn).value)
   }
 }
 
@@ -146,21 +157,37 @@ export async function getSpreadsheetConfig() {
   try {
     const settingsDoc = await spreadsheetSettings.get()
     if (!settingsDoc.exists) {
-      console.log('[WARN] spreadsheet settings not found. Using default column offset: %s', DEFAULT_COLUMN_OFFSET)
-      return { columnOffset: DEFAULT_COLUMN_OFFSET }
+      console.log('[WARN] spreadsheet settings not found. Using default column offsets: %j', DEFAULT_COLUMN_OFFSETS)
+      return { columnOffsets: DEFAULT_COLUMN_OFFSETS }
     }
 
-    const columnOffset = Number.parseInt(settingsDoc.get('columnOffset'), 10)
-    if (Number.isNaN(columnOffset)) {
-      console.log('[WARN] invalid column offset setting. Using default column offset: %s', DEFAULT_COLUMN_OFFSET)
-      return { columnOffset: DEFAULT_COLUMN_OFFSET }
+    const columnOffsets = settingsDoc.get('columnOffsets')
+    if (!columnOffsets) {
+      console.log('[WARN] column offsets setting not found. Using default column offsets: %j', DEFAULT_COLUMN_OFFSETS)
+      return { columnOffsets: DEFAULT_COLUMN_OFFSETS }
     }
-
-    return { columnOffset }
+    console.log('[INFO] loaded spreadsheet settings from %s: %j', settingsDoc.id, columnOffsets)
+    return { columnOffsets: normalizeColumnOffsets(columnOffsets) }
   } catch (err) {
-    console.log('[WARN] could not load spreadsheet settings: %s. Using default column offset: %s', err, DEFAULT_COLUMN_OFFSET)
-    return { columnOffset: DEFAULT_COLUMN_OFFSET }
+    console.log('[WARN] could not load spreadsheet settings: %s. Using default column offsets: %j', err, DEFAULT_COLUMN_OFFSETS)
+    return { columnOffsets: DEFAULT_COLUMN_OFFSETS }
   }
+}
+
+export function normalizeColumnOffsets(columnOffsets) {
+  return Object.fromEntries(
+    Object.entries(columnOffsets)
+      .map(([source, offset]) => [source.toLowerCase(), Number.parseInt(offset, 10)])
+      .filter(([, offset]) => !Number.isNaN(offset))
+  )
+}
+
+export function resolveColumnOffset(source, columnOffsets = DEFAULT_COLUMN_OFFSETS) {
+  if (!source) {
+    return undefined
+  }
+
+  return columnOffsets[source.toLowerCase()]
 }
 
 export function convertToCurrency(value) {
