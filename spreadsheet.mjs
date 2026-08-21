@@ -117,21 +117,57 @@ export async function updateSpreadsheet(dataMap) {
     if (categoryValueMap.length < 1) {
       console.warn("[WARN] category values not mapped. Stucked here");
     }
-    console.log(categoryValueMap.toObject())
-    _l.map(categoryValueMap.toObject(), function(billingName, row) {
-      workingRow = row
+    console.log(Object.fromEntries(categoryValueMap))
+
+    // Ensure target cells are loaded before reading/modifying them to avoid
+    // concurrent-change errors from the Google Sheets API.
+    try {
+      await billsSheet.loadCells();
+    } catch (err) {
+      console.log('[WARN] could not pre-load cells: %s', err.message || err)
+    }
+
+    // Iterate over found category rows and apply updates sequentially so
+    // we can safely use await for reloads and retries.
+    const categoryObj = Object.fromEntries(categoryValueMap)
+    for (const [rowKey, billingName] of Object.entries(categoryObj)) {
+      workingRow = Number(rowKey)
       console.log('[DEBUG] cell row: %s / value: %s', workingRow, billingName);
-      _l.forEach(dataMap.get(billingName).toArray(), function (entryToUpdate) {
+      const entries = dataMap.get(billingName).toArray()
+      for (const entryToUpdate of entries) {
         const columnOffset = resolveColumnOffset(entryToUpdate.source, spreadsheetConfig.columnOffsets)
         if (columnOffset === undefined) {
           console.log('[WARN] column offset not configured for source: %s. Skipping value: %s', entryToUpdate.source, entryToUpdate.value)
-          return
+          continue
         }
 
         const targetColumn = workingColumn + columnOffset
         const workingCell = billsSheet.getCell(workingRow, targetColumn)
-        let formulaToUpdate = workingCell.formula
-        let cellValue = workingCell.value
+
+        // Read formula/value with retry because the google-spreadsheet cell
+        // getters may throw "Value has been changed" when the local cache
+        // is stale. Reload the specific cell and retry once if needed.
+        let formulaToUpdate
+        let cellValue
+        let readAttempts = 0
+        const maxReadAttempts = 2
+        while (readAttempts < maxReadAttempts) {
+          try {
+            formulaToUpdate = workingCell.formula
+            cellValue = workingCell.value
+            break
+          } catch (readErr) {
+            readAttempts++
+            if (readAttempts >= maxReadAttempts) {
+              throw readErr
+            }
+            try {
+              await billsSheet.loadCells({ startRowIndex: workingRow, endRowIndex: workingRow + 1, startColumnIndex: targetColumn, endColumnIndex: targetColumn + 1 })
+            } catch (loadErr) {
+              console.log('[WARN] reload cell for read failed: %s', loadErr.message || loadErr)
+            }
+          }
+        }
         console.log('[DEBUG] source: %s / column offset: %s / target column: %s', entryToUpdate.source, columnOffset, targetColumn)
         console.log('[DEBUG] previous cell value: %s', cellValue)
         let currencyValue = convertToCurrency(entryToUpdate.value)
@@ -142,13 +178,35 @@ export async function updateSpreadsheet(dataMap) {
           formulaToUpdate = `${formulaToUpdate}+${currencyValue}`;
         }
 
-        if (formulaToUpdate === null) {
-          workingCell.value = null
-        } else {
-          workingCell.formula = formulaToUpdate
+        // Apply update with a simple retry in case the cell value was
+        // concurrently changed on the server. This handles the
+        // "Value has been changed" error from the google-spreadsheet lib.
+        let attempts = 0
+        const maxAttempts = 2
+        while (attempts < maxAttempts) {
+          try {
+            if (formulaToUpdate === null) {
+              workingCell.value = null
+            } else {
+              workingCell.formula = formulaToUpdate
+            }
+            break
+          } catch (e) {
+            attempts++
+            if (attempts >= maxAttempts) {
+              throw e
+            }
+            // refresh the specific cell and retry
+            try {
+              await billsSheet.loadCells({ startRowIndex: workingRow, endRowIndex: workingRow + 1, startColumnIndex: targetColumn, endColumnIndex: targetColumn + 1 })
+            } catch (loadErr) {
+              // if reload fails, continue to next attempt which will rethrow
+              console.log('[WARN] reload cell failed: %s', loadErr.message || loadErr)
+            }
+          }
         }
-      })
-    })
+      }
+    }
     await billsSheet.saveUpdatedCells()
   }
 }

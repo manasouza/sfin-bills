@@ -122,8 +122,17 @@ export async function processFiles(files) {
             console.error(err.message);
             process.exitCode = 1;
           })
+          // Compute the files that are being removed due to missing mapping
+          const removedFiles = files.filter(file => file.name.includes(receiptName) || file.name.includes(value.value))
+          // Keep only files that are not related to this missing category
           files = files.filter(file => !file.name.includes(receiptName) && !file.name.includes(value.value))
-          console.log('[DEBUG] content of files to be processed changed: %s', files)
+          // Log a compact, safe representation (name + id) only for the removed files
+          try {
+            const summary = removedFiles.map(f => ({ name: f.name, id: f.id }))
+            console.log('[DEBUG] removed files from processing due to missing category: %s', JSON.stringify(summary))
+          } catch (e) {
+            console.log('[DEBUG] removed files from processing due to missing category: (could not stringify)')
+          }
         }
       })
       if (spreadsheetMap.size === 0) {
