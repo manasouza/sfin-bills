@@ -34,7 +34,7 @@
     "google-spreadsheet": "4.1.4",
     "googleapis": "49.0.0",
     "hashmap": "2.4.0",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "moment": "2.29.4",
     "snyk": "^1.1297.3",
     "sprintf-js": "~1.0.3",
